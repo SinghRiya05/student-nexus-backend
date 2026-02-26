@@ -1,0 +1,52 @@
+{
+  "name": "student-nexus-backend",
+  "version": "1.0.0",
+  "description": "This is the student networking platform",
+  "keywords": [
+    "NodeJS",
+    "MongoDB",
+    "TypeScript",
+    "ExpressJS"
+  ],
+  "homepage": "https://github.com/SinghRiya05/student-nexus-backend#readme",
+  "bugs": {
+    "url": "https://github.com/SinghRiya05/student-nexus-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SinghRiya05/student-nexus-backend.git"
+  },
+  "license": "ISC",
+  "author": "Riya",
+  "type": "commonjs",
+  "main": "server.ts",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=dev nodemon src/server.ts",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^25.3.1",
+    "@types/nodemailer": "^7.0.11",
+    "cross-env": "^10.1.0",
+    "nodemon": "^3.1.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "handlebars": "^4.7.8",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.2.2",
+    "multer": "^2.0.2",
+    "nodemailer": "^8.0.1",
+    "zod": "^4.3.6"
+  }
+}
