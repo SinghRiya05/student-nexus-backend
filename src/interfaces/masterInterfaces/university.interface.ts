@@ -9,4 +9,5 @@ export interface IUniversity {
     isVerified: boolean;
     isDeleted: boolean;
     status: STATUS;
+    isActive: boolean;
 }

@@ -1,31 +1,43 @@
-import { model, Schema } from "mongoose";
-import { STATUS } from "../config";
+import mongoose, { Schema, Document } from "mongoose";
 import { ICountry } from "../interfaces/masterInterfaces/country.interface";
 
-const countryModelSchema = new Schema<ICountry>(
+export interface ICountryDocument extends ICountry, Document {}
+
+const countrySchema: Schema<ICountryDocument> = new Schema(
   {
     name: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
-      lowercase: true,
     },
-    image: {
-      type: String,
-      required: false
-    },
+
     code: {
       type: String,
-      required: false
+      required: true,
+      unique: true,
+      uppercase: true,
+      trim: true,
     },
-    status: {
-      type: String,
-      enum: Object.values(STATUS),
-      default: STATUS.ACTIVE,
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  }
 );
 
+const CountryModel = mongoose.model<ICountryDocument>(
+  "Country",
+  countrySchema
+);
 
-export const countryModel = model<ICountry>("Country", countryModelSchema);
+export default CountryModel;

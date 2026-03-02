@@ -13,6 +13,7 @@ export const COMMON_ERROR_MESSAGE = {
   UNAUTHORIZATION: "Unauthorization",
   FORBIDDEN: "Forbidden",
   INTERNALSERVER: "InternalServer",
+  CONFLICTERROR: "Conflict"
 };
 
 

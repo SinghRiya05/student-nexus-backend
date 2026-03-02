@@ -16,6 +16,12 @@ export class NotFoundError extends AppError {
   }
 }
 
+export class ConflictError extends AppError {
+  constructor(message = COMMON_ERROR_MESSAGE.CONFLICTERROR) {
+    super(message, STATUS_CODES.CONFLICT);
+  }
+}
+
 export class BadRequestError extends AppError {
   constructor(message = COMMON_ERROR_MESSAGE.BAD_REQUEST) {
     super(message, STATUS_CODES.BAD_REQUEST);
