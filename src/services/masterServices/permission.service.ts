@@ -1,4 +1,4 @@
-import { permissionModel } from "../../entities/permission.model"
+import { permissionModel } from "../../models/permission.model"
 import { IPermission } from "../../interfaces/masterInterfaces/permission.interface";
 import { BadRequestError,NotFoundError } from "../../core/errors";
 import crypto from "crypto";

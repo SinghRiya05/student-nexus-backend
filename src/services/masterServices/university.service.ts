@@ -1,5 +1,5 @@
 import { IUniversity } from "../../interfaces/masterInterfaces/university.interface";
-import UniversityModel from "../../entities/university.model"
+import UniversityModel from "../../models/university.model"
 import { BadRequestError, ConflictError,NotFoundError } from "../../core/errors";
 import mongoose from "mongoose";
 

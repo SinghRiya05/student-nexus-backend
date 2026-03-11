@@ -1,8 +1,8 @@
 import { Types } from "mongoose";
-import { rolePermissionModel } from "../../entities/role-permission.model";
+import { rolePermissionModel } from "../../models/role-permission.model";
 import { IRolePermission } from "../../interfaces/masterInterfaces/role-permission.interface";
-import RoleModel from "../../entities/role.model";
-import { permissionModel } from "../../entities/permission.model";
+import RoleModel from "../../models/role.model";
+import { permissionModel } from "../../models/permission.model";
 import { NotFoundError, BadRequestError } from "../../core/errors";
 
 export class RolePermissionService {

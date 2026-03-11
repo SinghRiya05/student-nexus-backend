@@ -1,5 +1,5 @@
 import { ICountry } from "../../interfaces/masterInterfaces/country.interface";
-import CountryModel from "../../entities/country.model";
+import CountryModel from "../../models/country.model";
 import { NotFoundError } from "../../core/errors";
 export class CountryService {
 

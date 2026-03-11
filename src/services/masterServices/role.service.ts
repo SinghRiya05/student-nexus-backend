@@ -1,4 +1,4 @@
-import RoleModel from "../../entities/role.model";
+import RoleModel from "../../models/role.model";
 import {IRole} from "../../interfaces/masterInterfaces/role.interface"
 import { NotFoundError,ConflictError } from "../../core/errors";
 
