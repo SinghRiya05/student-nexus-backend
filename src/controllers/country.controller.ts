@@ -34,7 +34,4 @@ export class CountryController {
     sendResponse(res, STATUS_CODES.SUCCESS, true, "Country deleted successfully", result);
   }
 
-
-
-
 }
