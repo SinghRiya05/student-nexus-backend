@@ -16,4 +16,5 @@ export interface IUniversity {
     description?: string;
     image?: string;
     logo?: string;
+    courses?: Types.ObjectId[];
 }

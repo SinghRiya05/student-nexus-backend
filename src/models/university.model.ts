@@ -74,6 +74,11 @@ const universitySchema: Schema<IUniversityDocument> = new Schema(
       default: true,
     },
 
+    courses: {
+      type: [Types.ObjectId],
+      ref: "Course",
+    },
+
     status: {
       type: String,
       enum: Object.values(STATUS),
