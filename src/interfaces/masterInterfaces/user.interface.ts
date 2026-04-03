@@ -10,8 +10,8 @@ export interface IUser {
   password: string;
 
   universityId: Types.ObjectId;
-  courseId: Types.ObjectId;
-  semesterId: Types.ObjectId;
+  courseId?: Types.ObjectId[];
+  semesterId?: Types.ObjectId;
   roleId: Types.ObjectId;
 
   verificationStatus: boolean;

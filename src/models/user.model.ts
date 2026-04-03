@@ -41,16 +41,14 @@ const userSchema = new Schema<IUser>(
       required: true
     },
 
-    courseId: {
+    courseId: [{
       type: Types.ObjectId,
-      ref: "Course",
-      required: true
-    },
+      ref: "Course"
+    }],
 
     semesterId: {
       type: Types.ObjectId,
-      ref: "Semester",
-      required: true
+      ref: "Semester"
     },
 
     roleId: {

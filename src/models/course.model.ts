@@ -11,16 +11,21 @@ const courseSchema = new Schema<ICourse>(
       trim: true,
     },
 
-    university: {
-      type: Types.ObjectId,
-      ref: "University",
+    course_short_name: {
+      type: String,
       required: true,
+      trim: true,
     },
 
     durationYears: {
       type: Number,
       required: true,
       min: 1,
+    },
+
+    description: {
+      type: String,
+      trim: true,
     },
 
     status: {

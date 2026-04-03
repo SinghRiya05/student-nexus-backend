@@ -13,17 +13,49 @@ const universitySchema: Schema<IUniversityDocument> = new Schema(
       trim: true,
     },
 
+    short_name: {
+      type: String,
+      unique: true,
+      trim: true,
+    },
+
+    image: {
+      type: String,
+      trim: true,
+    },
+
+    logo: {
+      type: String,
+      trim: true,
+    },
+
     domain: {
       type: String,
-      required: true,
       unique: true,
       lowercase: true,
+      trim: true,
+    },
+
+    description: {
+      type: String,
       trim: true,
     },
 
     country: {
       type: Types.ObjectId,
       ref: "Country",
+      required: true,
+    },
+
+    state: {
+      type: Types.ObjectId,
+      ref: "State",
+      required: true,
+    },
+
+    city: {
+      type: Types.ObjectId,
+      ref: "City",
       required: true,
     },
 
