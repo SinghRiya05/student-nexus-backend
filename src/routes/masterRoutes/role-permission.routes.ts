@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { validateRequest } from "../../middlewares/validateRequest";
-import { RolePermissionController } from "../../controllers/masterCcontrollers/role-permission.controller";
-import { createRolePermissionSchema } from "../../validations/masterValidation/role-permission.validation";
+import { RolePermissionController } from "../../controllers/role-permission.controller";
+import { createRolePermissionSchema } from "../../validations/role-permission.validation";
 
 const rolePermissionRouter = Router();
 

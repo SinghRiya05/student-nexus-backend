@@ -11,4 +11,4 @@ const permissionSchema = new Schema<IPermission>(
   { timestamps: true }
 );
 
-export const permissionModel = model<IPermission>("Permission", permissionSchema);
+export const PermissionModel = model<IPermission>("Permission", permissionSchema);

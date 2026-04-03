@@ -1,7 +1,7 @@
-import { PermissionService } from "../../services/masterServices/permission.service";
+import { PermissionService } from "../services/permission.service";
 import { Request, Response } from "express";
-import { sendResponse } from "../../utils/sendResponse";
-import { STATUS_CODES } from "../../config";
+import { sendResponse } from "../utils/sendResponse";
+import { STATUS_CODES } from "../config";
 
 export class PermissionController {
 

@@ -1,5 +1,5 @@
 import z from "zod";
-import { STATUS } from "../../config";
+import { STATUS } from "../config";
 
 export const createRoleSchema = z.object({
   body: z.object({

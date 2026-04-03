@@ -9,4 +9,4 @@ const rolePermissionSchema = new Schema<IRolePermission>(
   { timestamps: true }
 );
 
-export const rolePermissionModel = model<IRolePermission>("RolePermission", rolePermissionSchema);
+export const RolePermissionModel = model<IRolePermission>("RolePermission", rolePermissionSchema);
