@@ -6,5 +6,5 @@ export interface ICourse {
   course_short_name: string;
   durationYears: number;
   description?: string;
-  status?:STATUS;
+  status?: STATUS;
 }
