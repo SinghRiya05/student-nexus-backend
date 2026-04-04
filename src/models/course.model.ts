@@ -9,6 +9,7 @@ const courseSchema = new Schema<ICourse>(
       type: String,
       required: true,
       trim: true,
+      unique: true,
     },
 
     course_short_name: {
@@ -30,8 +31,8 @@ const courseSchema = new Schema<ICourse>(
 
     status: {
       type: String,
-      enum:Object.values(STATUS),
-      default:STATUS.ACTIVE,
+      enum: Object.values(STATUS),
+      default: STATUS.ACTIVE,
     },
   },
   {
@@ -39,4 +40,4 @@ const courseSchema = new Schema<ICourse>(
   }
 );
 
-export const courseModel = model<ICourse>("Course", courseSchema);
+export const CourseModel = model<ICourse>("Course", courseSchema);

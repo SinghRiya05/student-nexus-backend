@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 import { IUniversity } from "../interfaces/masterInterfaces/university.interface";
 import { STATUS } from "../config";
 
-export interface IUniversityDocument extends IUniversity, Document {}
+export interface IUniversityDocument extends IUniversity, Document { }
 
 const universitySchema: Schema<IUniversityDocument> = new Schema(
   {
@@ -11,11 +11,13 @@ const universitySchema: Schema<IUniversityDocument> = new Schema(
       required: true,
       unique: true,
       trim: true,
+      lowercase: true,
     },
 
     short_name: {
       type: String,
       unique: true,
+      sparse: true,
       trim: true,
     },
 
@@ -32,6 +34,7 @@ const universitySchema: Schema<IUniversityDocument> = new Schema(
     domain: {
       type: String,
       unique: true,
+      sparse: true,
       lowercase: true,
       trim: true,
     },

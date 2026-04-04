@@ -1,15 +1,15 @@
-import RoleModel from "../../models/role.model";
-import {IRole} from "../../interfaces/masterInterfaces/role.interface"
-import { NotFoundError,ConflictError } from "../../core/errors";
+import RoleModel from "../models/role.model";
+import { IRole } from "../interfaces/masterInterfaces/role.interface"
+import { NotFoundError, ConflictError } from "../core/errors";
 
-export class RoleService{
+export class RoleService {
 
-    create=async(data:IRole)=>{
+    create = async (data: IRole) => {
         const existingRole = await RoleModel.findOne({ name: data.name });
-        if(existingRole) throw new ConflictError("Role already exixts");
+        if (existingRole) throw new ConflictError("Role already exixts");
         const role = await RoleModel.create({
-        name: data.name,
-        description: data.description,
+            name: data.name,
+            description: data.description,
         });
         return role;
     }
@@ -41,8 +41,8 @@ export class RoleService{
     };
 
     delete = async (id: string) => {
-    const deletedRole = await RoleModel.findByIdAndDelete(id);
-    if (!deletedRole)  throw new NotFoundError("Role not found");
-    return deletedRole;
-};
+        const deletedRole = await RoleModel.findByIdAndDelete(id);
+        if (!deletedRole) throw new NotFoundError("Role not found");
+        return deletedRole;
+    };
 }
