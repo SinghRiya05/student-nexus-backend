@@ -75,6 +75,16 @@ const userSchema = new Schema<IUser>(
       default: false
     },
 
+    followersCount: {
+        type: Number,
+        default: 0
+    },
+
+    followingCount: {
+        type: Number,
+        default: 0
+    },
+
     status: {
       type: String,
       enum: ["ACTIVE", "INACTIVE"],
@@ -84,7 +94,20 @@ const userSchema = new Schema<IUser>(
     isDeleted: {
       type: Boolean,
       default: false
-    }
+    },
+
+    trustScore: {
+      type: Number,
+      default: 0,
+    },
+
+    startYear: {
+      type: Number,
+    },
+
+    endYear: {
+      type: Number,
+    },
   },
   {
     timestamps: true

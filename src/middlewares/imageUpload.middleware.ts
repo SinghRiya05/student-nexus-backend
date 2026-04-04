@@ -2,6 +2,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { BadRequestError } from "../core/errors";
+import { getUploadPath } from "../utils/file.utils";
 
 const ALLOWED_MIME_TYPES = [
   "image/jpeg",
@@ -39,14 +40,14 @@ const fileFilter: multer.Options["fileFilter"] = (_req, file, cb) => {
 };
 
 export const uploadImage = multer({
-  storage: createStorage("uploads/images"),
+  storage: createStorage(getUploadPath("images")),
   fileFilter,
   limits: { fileSize: MAX_FILE_SIZE },
 });
 
-export const uploadTo = (folder: string) =>
+export const uploadTo = (category: string) =>
   multer({
-    storage: createStorage(folder),
+    storage: createStorage(getUploadPath(category)),
     fileFilter,
     limits: { fileSize: MAX_FILE_SIZE },
   });

@@ -1,6 +1,10 @@
 import fs from "fs";
 import path from "path";
 
+export const getUploadPath = (category: string) => {
+  return path.join("uploads", category);
+};
+
 export const deleteFileIfExists = (filePath?: string) => {
   if (!filePath) return;
 
@@ -11,19 +15,5 @@ export const deleteFileIfExists = (filePath?: string) => {
 
   if (fs.existsSync(absolutePath)) {
     fs.unlinkSync(absolutePath);
-    return;
-  }
-
-  if (normalizedPath.includes("uploads/countries/")) {
-    const legacyPath = normalizedPath.replace(
-      "uploads/countries/",
-      "uploads/cities/"
-    );
-    const legacyAbsolutePath = path.resolve(__dirname, "..", "..", legacyPath);
-
-    if (fs.existsSync(legacyAbsolutePath)) {
-      fs.unlinkSync(legacyAbsolutePath);
-      return;
-    }
   }
 };

@@ -20,10 +20,17 @@ export interface IUser {
   verificationStatus: boolean;
   status: STATUS;
 
+  followersCount: number;
+  followingCount: number;
+
   isDeleted: boolean;
 
   createdAt?: Date;
   updatedAt?: Date;
+
+  trustScore?: number;
+  startYear?: number;
+  endYear?: number;
 
   comparePassword(password: string): Promise<boolean>;
 }

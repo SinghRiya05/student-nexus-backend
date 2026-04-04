@@ -12,10 +12,6 @@ const aluminiProfileSchema: Schema<IAluminiProfileDocument> = new Schema(
       unique: true,
     },
     
-    graduationYear: {
-      type: Number,
-    },
-    
     currentCompany: {
       type: String,
       trim: true,
@@ -25,11 +21,16 @@ const aluminiProfileSchema: Schema<IAluminiProfileDocument> = new Schema(
       type: String,
       trim: true,
     },
-    
-    bio: {
+
+    skills: [{
       type: String,
       trim: true,
-    },
+    }],
+
+    projects: [{
+      type: String,
+      trim: true,
+    }]
   },
   {
     timestamps: true,

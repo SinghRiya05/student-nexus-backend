@@ -11,11 +11,27 @@ const studentProfileSchema: Schema<IStudentProfileDocument> = new Schema(
       required: true,
       unique: true,
     },
-    
-    skills: [{
+
+    hobby_badge: {
+      type: String,
+      trim: true,
+    },
+
+    projects: [{
       type: String,
       trim: true,
     }],
+
+    trustScore: {
+      type: Number,
+      default: 0,
+    },
+
+    skills: [{
+      type: String,
+      trim: true,
+    }]
+    
   },
   {
     timestamps: true,

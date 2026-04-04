@@ -2,7 +2,10 @@ import { Types } from "mongoose";
 
 export interface IStudentProfile {
     userId: Types.ObjectId;
-    enrollmentNumber?: string;
-    bio?: string;
+    hobby_badge?: string;
     skills?: string[];
+    projects?: string[];
+    trustScore?: number;
+    startYear?: number;
+    endYear?: number;
 }

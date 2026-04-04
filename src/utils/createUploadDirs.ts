@@ -1,7 +1,7 @@
 import fs from "fs";
 
 export const ensureUploadDirs = () => {
-  const dirs = ["uploads", "uploads/images"];
+  const dirs = ["uploads"];
 
   dirs.forEach((dir) => {
     if (!fs.existsSync(dir)) {
