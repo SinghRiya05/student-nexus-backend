@@ -12,16 +12,6 @@ const studentProfileSchema: Schema<IStudentProfileDocument> = new Schema(
       unique: true,
     },
     
-    enrollmentNumber: {
-      type: String,
-      trim: true,
-    },
-    
-    bio: {
-      type: String,
-      trim: true,
-    },
-    
     skills: [{
       type: String,
       trim: true,

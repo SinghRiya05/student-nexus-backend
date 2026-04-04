@@ -8,6 +8,9 @@ export interface IUser {
   email: string;
   phone: string;
   password: string;
+  avatar?: string;
+  coverImage?: string;
+  bio?: string;
 
   universityId: Types.ObjectId;
   courseId?: Types.ObjectId[];

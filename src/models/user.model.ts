@@ -30,6 +30,18 @@ const userSchema = new Schema<IUser>(
       unique: true
     },
 
+    avatar: {
+      type: String,
+    },
+
+    coverImage: {
+      type: String,
+    },
+
+    bio: {
+      type: String,
+    },
+
     password: {
       type: String,
       required: true
