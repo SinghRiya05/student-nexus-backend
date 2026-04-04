@@ -13,6 +13,18 @@ export class UniversityCourseController {
         sendResponse(res, STATUS_CODES.CREATED, true, "Course assigned successfully", result);
     }
 
+    bulkAssignCourses = async (req: Request, res: Response) => {
+        const { universityId, courseIds } = req.body;
+        const result = await universityCourseService.bulkAssignCourses(universityId, courseIds);
+        sendResponse(res, STATUS_CODES.CREATED, true, "Courses assigned successfully", result);
+    }
+
+    bulkRemoveCourses = async (req: Request, res: Response) => {
+        const { universityId, courseIds } = req.body;
+        const result = await universityCourseService.bulkRemoveCourses(universityId, courseIds);
+        sendResponse(res, STATUS_CODES.SUCCESS, true, "Courses removed successfully", result);
+    }
+
     removeCourse = async (req: Request, res: Response) => {
         const { universityId, courseId } = req.body;
         const result = await universityCourseService.removeCourse(universityId, courseId);

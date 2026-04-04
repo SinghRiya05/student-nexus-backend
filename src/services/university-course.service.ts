@@ -21,6 +21,18 @@ export class UniversityCourseService {
         });
     }
 
+    bulkAssignCourses = async (universityId: string, courseIds: string[]) => {
+        const university = await UniversityModel.findById(universityId);
+        if (!university) throw new NotFoundError("University not found");
+        const data = courseIds.map(courseId => ({
+            universityId,
+            courseId
+        }));
+        return await UniversityCourseModel.insertMany(data, {
+            ordered: false
+        });
+    };
+
     getCoursesByUniversity = async (universityId: string) => {
         const university = await UniversityModel.findById(universityId);
         if (!university) throw new NotFoundError("University not found");
@@ -28,12 +40,22 @@ export class UniversityCourseService {
             .populate("courseId");
     }
 
+
     getUniversitiesByCourse = async (courseId: string) => {
         const course = await CourseModel.findById(courseId);
         if (!course) throw new NotFoundError("Course not found");
         return await UniversityCourseModel.find({ courseId })
             .populate("universityId");
     }
+
+    bulkRemoveCourses = async (universityId: string, courseIds: string[]) => {
+        const university = await UniversityModel.findById(universityId);
+        if (!university) throw new NotFoundError("University not found");
+        return await UniversityCourseModel.deleteMany({
+            universityId,
+            courseId: { $in: courseIds }
+        });
+    };
 
     removeCourse = async (universityId: string, courseId: string) => {
         const existing = await UniversityCourseModel.findOneAndDelete({
