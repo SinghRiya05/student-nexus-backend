@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 import { ISemester } from "../interfaces/masterInterfaces/semester.interface";
 import { STATUS } from "../config";
 
-export interface ISemesterDocument extends ISemester, Document {}
+export interface ISemesterDocument extends ISemester, Document { }
 
 const semesterSchema: Schema<ISemesterDocument> = new Schema(
   {
@@ -12,9 +12,21 @@ const semesterSchema: Schema<ISemesterDocument> = new Schema(
       trim: true,
     },
 
+    number: {
+      type: Number,
+      required: true,
+      unique: true,
+    },
+
     description: {
       type: String,
       trim: true,
+    },
+
+    courseId: {
+      type: Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
     },
 
     status: {

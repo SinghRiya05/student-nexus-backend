@@ -44,7 +44,8 @@ const userSchema = new Schema<IUser>(
 
     password: {
       type: String,
-      required: true
+      required: true,
+      select: false
     },
 
     universityId: {
@@ -53,7 +54,7 @@ const userSchema = new Schema<IUser>(
       required: true
     },
 
-    courseId: [{
+    courseIds: [{
       type: Types.ObjectId,
       ref: "Course"
     }],
@@ -77,7 +78,7 @@ const userSchema = new Schema<IUser>(
     status: {
       type: String,
       enum: ["ACTIVE", "INACTIVE"],
-      default: "ACTIVE"
+      default: "INACTIVE"
     },
 
     isDeleted: {
@@ -90,14 +91,14 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-userSchema.pre("save",async function () {
-    if(!this.isModified("password")) return;
-    const salt = await bcrypt.genSalt(10);
-    this.password=await bcrypt.hash(this.password,salt);
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 })
 
-userSchema.methods.comparePassword=async function(candidatePassword:string){
-    return bcrypt.compare(candidatePassword, this.password);
+userSchema.methods.comparePassword = async function (candidatePassword: string) {
+  return bcrypt.compare(candidatePassword, this.password);
 }
 
 export const userModel = model<IUser>("User", userSchema);

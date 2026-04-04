@@ -8,6 +8,7 @@ import cityRouter from "../masterRoutes/city.route";
 import universityRouter from "../masterRoutes/university.route";
 import courseRouter from "../masterRoutes/course.routes";
 import universityCourseRouter from "../masterRoutes/university-course.routes";
+import semesterRouter from "../masterRoutes/semester.routes";
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use("/role-permissions", rolePermissionRouter)
 router.use("/university", universityRouter);
 router.use("/course", courseRouter);
 router.use("/university-course", universityCourseRouter);
+router.use("/semester", semesterRouter);
 
 export default router;

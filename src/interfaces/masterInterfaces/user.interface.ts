@@ -13,7 +13,7 @@ export interface IUser {
   bio?: string;
 
   universityId: Types.ObjectId;
-  courseId?: Types.ObjectId[];
+  courseIds?: Types.ObjectId[];
   semesterId?: Types.ObjectId;
   roleId: Types.ObjectId;
 
