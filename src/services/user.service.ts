@@ -6,8 +6,9 @@ import { ConflictError, NotFoundError } from "../core/errors";
 import { sendEmail } from "../utils/sendEmail";
 import crypto from "crypto";
 import { renderTemplate } from "../utils/renderTemplate";
-import { signAccessToken } from "../core/jwt";
+import { parseExpiryToMs, signAccessToken, signRefreshToken, verifyRefreshToken } from "../core/jwt";
 import bcrypt from "bcrypt";
+import { refreshTokenModel } from "../models/refreshToken.model";
 
 export class AuthService {
 
@@ -53,7 +54,7 @@ export class AuthService {
         return user;
     }
 
-    verifyEmail = async (email: string, otp: string) => {
+    verifyEmail = async (email: string, otp: string, ip: string, userAgent: string) => {
         const user = await userModel.findOne({ email });
         if (!user) throw new Error("User not found");
         const authCode = await UserAuthCodeModel.findOne({
@@ -67,11 +68,22 @@ export class AuthService {
         await authCode.save();
         user.verificationStatus = true;
         await user.save();
-        const accessToken = signAccessToken({ userId: user._id })
+        const accessToken = signAccessToken({ userId: user._id });
+        const refreshToken = signRefreshToken({
+            userId: user._id,
+            ipAddress: ip,
+            userAgent: userAgent,
+        })
+        await refreshTokenModel.create({
+            user: user._id,
+            token: refreshToken,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            createdByIp: ip,
+        })
         return { user, accessToken };
     }
 
-    loginUser = async (email: string, password: string) => {
+    loginUser = async (email: string, password: string, ip: string, userAgent: string) => {
         const user = await userModel.findOne({ email });
         if (!user) throw new Error("User not found");
         const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -79,6 +91,54 @@ export class AuthService {
         if (!user.verificationStatus) throw new Error("User not verified");
 
         const accessToken = signAccessToken({ userId: user._id })
+        const refreshToken = signRefreshToken({
+            userId: user._id,
+            ipAddress: ip,
+            userAgent: userAgent,
+        })
+        await refreshTokenModel.create({
+            user: user._id,
+            token: refreshToken,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            createdByIp: ip,
+        })
         return { user, accessToken };
     }
+
+    refreshToken = async (token: string, ip: string) => {
+        const decoded = verifyRefreshToken(token);
+        const existingToken = await refreshTokenModel.findOne({ token });
+        if (!existingToken) throw new Error("Token not found");
+        if (!existingToken.isActive) throw new Error("Token expired or revoked");
+        const user = await userModel.findById(decoded.userId);
+        if (!user) throw new Error("User not found");
+        const newRefreshToken = signRefreshToken({
+            userId: user._id,
+            ipAddress: ip
+        });
+        existingToken.revokedAt = new Date();
+        existingToken.revokedByIp = ip;
+        existingToken.replacedByToken = newRefreshToken;
+        await existingToken.save();
+        await refreshTokenModel.create({
+            user: user._id,
+            token: newRefreshToken,
+            expiresAt: new Date(Date.now() + parseExpiryToMs(process.env.REFRESH_TOKEN_EXPIRES!)),
+            createdByIp: ip
+        });
+        const accessToken = signAccessToken({ userId: user._id });
+        return {
+            accessToken,
+            refreshToken: newRefreshToken
+        };
+    };
+
+
+    logout = async (token: string, ip: string) => {
+        const existingToken = await refreshTokenModel.findOne({ token });
+        if (!existingToken) return;
+        existingToken.revokedAt = new Date();
+        existingToken.revokedByIp = ip;
+        await existingToken.save();
+    };
 }
