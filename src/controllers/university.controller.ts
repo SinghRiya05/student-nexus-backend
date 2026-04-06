@@ -18,17 +18,20 @@ export class UniversityController {
     }
 
     getUniversityById = async (req: Request, res: Response) => {
-        const university = await universityService.getUniversityById(req.params.id);
+        const id = req.params.id as string;
+        const university = await universityService.getUniversityById(id);
         sendResponse(res, STATUS_CODES.SUCCESS, true, "University fetched successfully", university);
     }
 
     updateUniversity = async (req: Request, res: Response) => {
-        const university = await universityService.updateUniversity(req.params.id, req.body);
+        const id = req.params.id as string;
+        const university = await universityService.updateUniversity(id, req.body);
         sendResponse(res, STATUS_CODES.SUCCESS, true, "University updated successfully", university);
     }
 
     deleteUniversity = async (req: Request, res: Response) => {
-        const university = await universityService.deleteUniversity(req.params.id);
+        const id = req.params.id as string;
+        const university = await universityService.deleteUniversity(id);
         sendResponse(res, STATUS_CODES.SUCCESS, true, "University deleted successfully", university);
     }
 
