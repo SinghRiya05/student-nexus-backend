@@ -42,6 +42,9 @@ const envSchema = z.object({
   MAIL_FROM_NAME: z.string().default("Student Nexus"),
 
   FRONTEND_URL: z.string().url(),
+  
+  REDIS_HOST: z.string().default("127.0.0.1"),
+  REDIS_PORT: z.coerce.number().default(6379),
 });
 
 const env = envSchema.parse(process.env);

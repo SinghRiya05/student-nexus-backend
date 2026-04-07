@@ -54,6 +54,14 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use('/api/v1', apiRoutes);
+
+// Serve test call page in development only
+if (process.env.NODE_ENV === "dev") {
+  app.get("/test-call", (_req, res) => {
+    res.sendFile(path.join(process.cwd(), "test-call.html"));
+  });
+}
+
 app.use(errorHandler);
 
 export default app;
