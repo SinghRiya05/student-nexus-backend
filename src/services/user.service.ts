@@ -2,143 +2,265 @@ import { userModel } from "../models/user.model";
 import UserAuthCodeModel from "../models/user.authcode.model";
 import { IUser } from "../interfaces/masterInterfaces/user.interface";
 import RoleModel from "../models/role.model";
-import { ConflictError, NotFoundError } from "../core/errors";
 import { sendEmail } from "../utils/sendEmail";
 import crypto from "crypto";
 import { renderTemplate } from "../utils/renderTemplate";
-import { parseExpiryToMs, signAccessToken, signRefreshToken, verifyRefreshToken } from "../core/jwt";
+import {
+  parseExpiryToMs,
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} from "../core/jwt";
 import bcrypt from "bcrypt";
 import { refreshTokenModel } from "../models/refreshToken.model";
+import StudentProfileModel from "../models/student.profile.model";
+import AluminiProfileModel from "../models/alumini.profile";
+import TeacherProfileModel from "../models/teacher.profile.model";
+import { Types } from "mongoose";
 
 export class AuthService {
-
-    registerUser = async (userData: IUser) => {
-        const { email, roleId } = userData;
-        const existingUser = await userModel.findOne({ email });
-        if (existingUser) throw new Error("User already exists");
-        const role = await RoleModel.findById(roleId);
-        if (!role) throw new Error("Role not found");
-        if (["ADMIN", "SUPER_ADMIN"].includes(role.name)) throw new ConflictError("Invalid role selection");
-        const user = await userModel.create({
-            ...userData,
-            verificationStatus: false
-        });
-        const otp = crypto.randomInt(100000, 999999).toString();
-        await UserAuthCodeModel.deleteMany({
-            userId: user._id,
-            purpose: "VERIFY_EMAIL"
-        });
-        await UserAuthCodeModel.create({
-            userId: user._id,
-            code: otp,
-            purpose: "VERIFY_EMAIL",
-            expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-            isUsed: false
-        });
-        try {
-            await sendEmail({
-                to: email,
-                subject: "Verify your email",
-                html: renderTemplate("otp-verification", {
-                    firstName: user.firstName,
-                    otp: otp,
-                    expiryMinutes: 10,
-                    year: new Date().getFullYear(),
-                    appName: "Student Nexus"
-                }),
-                text: `Hello ${user.firstName}, Your OTP is ${otp}. It will expire in 10 minutes.`
-            })
-        } catch (error) {
-            console.error("Failed to send verification email:", error);
-        }
-        return user;
+  // ------ REGISTRATION FIRST STEP ------
+  registerStepOne = async (userData: Partial<IUser>) => {
+    const { email } = userData;
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) throw new Error("User already exists");
+    const user = await userModel.create({
+      ...userData,
+      verificationStatus: false,
+    });
+    const otp = crypto.randomInt(100000, 999999).toString();
+    await UserAuthCodeModel.deleteMany({
+      userId: user._id,
+      purpose: "VERIFY_EMAIL",
+    });
+    await UserAuthCodeModel.create({
+      userId: user._id,
+      code: otp,
+      purpose: "VERIFY_EMAIL",
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      isUsed: false,
+    });
+    try {
+      await sendEmail({
+        to: email!,
+        subject: "Verify your email",
+        html: renderTemplate("otp-verification", {
+          firstName: user.firstName,
+          otp: otp,
+          expiryMinutes: 10,
+          year: new Date().getFullYear(),
+          appName: "Student Nexus",
+        }),
+        text: `Hello ${user.firstName}, Your OTP is ${otp}. It will expire in 10 minutes.`,
+      });
+    } catch (error) {
+      console.error("Failed to send verification email:", error);
     }
+    return user;
+  };
 
-    verifyEmail = async (email: string, otp: string, ip: string, userAgent: string) => {
-        const user = await userModel.findOne({ email });
-        if (!user) throw new Error("User not found");
-        const authCode = await UserAuthCodeModel.findOne({
-            userId: user._id,
-            code: otp,
-            purpose: "VERIFY_EMAIL",
-            isUsed: false
-        });
-        if (!authCode) throw new Error("Invalid or expired OTP");
-        authCode.isUsed = true;
-        await authCode.save();
-        user.verificationStatus = true;
-        await user.save();
-        const accessToken = signAccessToken({ userId: user._id });
-        const refreshToken = signRefreshToken({
-            userId: user._id,
-            ipAddress: ip,
-            userAgent: userAgent,
-        })
-        await refreshTokenModel.create({
-            user: user._id,
-            token: refreshToken,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            createdByIp: ip,
-        })
-        return { user, accessToken };
+  // ------ RESEND OTP ------
+  resendOtp = async (email: string) => {
+    const user = await userModel.findOne({ email });
+    if (!user) throw new Error("User not found");
+    if (user.verificationStatus) throw new Error("User already verified");
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    await UserAuthCodeModel.deleteMany({
+      userId: user._id,
+      purpose: "VERIFY_EMAIL",
+    });
+    await UserAuthCodeModel.create({
+      userId: user._id,
+      code: otp,
+      purpose: "VERIFY_EMAIL",
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      isUsed: false,
+    });
+
+    try {
+      await sendEmail({
+        to: email,
+        subject: "Verify your email",
+        html: renderTemplate("otp-verification", {
+          firstName: user.firstName,
+          otp: otp,
+          expiryMinutes: 10,
+          year: new Date().getFullYear(),
+          appName: "Student Nexus",
+        }),
+        text: `Hello ${user.firstName}, Your OTP is ${otp}. It will expire in 10 minutes.`,
+      });
+    } catch (error) {
+      console.error("Failed to send verification email:", error);
     }
+    return true;
+  };
 
-    loginUser = async (email: string, password: string, ip: string, userAgent: string) => {
-        const user = await userModel.findOne({ email });
-        if (!user) throw new Error("User not found");
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) throw new Error("Invalid password");
-        if (!user.verificationStatus) throw new Error("User not verified");
+  // ------ EMAIL VERIFICATION ------
+  verifyEmail = async (
+    email: string,
+    otp: string,
+    ip: string,
+    userAgent: string,
+  ) => {
+    const user = await userModel.findOne({ email });
+    if (!user) throw new Error("User not found");
+    const authCode = await UserAuthCodeModel.findOne({
+      userId: user._id,
+      code: otp,
+      purpose: "VERIFY_EMAIL",
+      isUsed: false,
+    });
+    if (!authCode) throw new Error("Invalid or expired OTP");
+    authCode.isUsed = true;
+    await authCode.save();
+    user.verificationStatus = true;
+    await user.save();
+    const accessToken = signAccessToken({ userId: user._id });
+    const refreshToken = signRefreshToken({
+      userId: user._id,
+      ipAddress: ip,
+      userAgent: userAgent,
+    });
+    await refreshTokenModel.create({
+      user: user._id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      createdByIp: ip,
+    });
 
-        const accessToken = signAccessToken({ userId: user._id })
-        const refreshToken = signRefreshToken({
-            userId: user._id,
-            ipAddress: ip,
-            userAgent: userAgent,
-        })
-        await refreshTokenModel.create({
-            user: user._id,
-            token: refreshToken,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            createdByIp: ip,
-        })
-        return { user, accessToken };
-    }
+    return { user, accessToken, refreshToken };
+  };
 
-    refreshToken = async (token: string, ip: string) => {
-        const decoded = verifyRefreshToken(token);
-        const existingToken = await refreshTokenModel.findOne({ token });
-        if (!existingToken) throw new Error("Token not found");
-        if (!existingToken.isActive) throw new Error("Token expired or revoked");
-        const user = await userModel.findById(decoded.userId);
-        if (!user) throw new Error("User not found");
-        const newRefreshToken = signRefreshToken({
-            userId: user._id,
-            ipAddress: ip
-        });
-        existingToken.revokedAt = new Date();
-        existingToken.revokedByIp = ip;
-        existingToken.replacedByToken = newRefreshToken;
-        await existingToken.save();
-        await refreshTokenModel.create({
-            user: user._id,
-            token: newRefreshToken,
-            expiresAt: new Date(Date.now() + parseExpiryToMs(process.env.REFRESH_TOKEN_EXPIRES!)),
-            createdByIp: ip
-        });
-        const accessToken = signAccessToken({ userId: user._id });
-        return {
-            accessToken,
-            refreshToken: newRefreshToken
-        };
+  // ------ LOGIN USER ------
+  loginUser = async (
+    email: string,
+    password: string,
+    ip: string,
+    userAgent: string,
+  ) => {
+    const user = await userModel.findOne({ email }).select("+password");
+    if (!user) throw new Error("User not found");
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) throw new Error("Invalid password");
+    if (!user.verificationStatus) throw new Error("User not verified");
+
+    const accessToken = signAccessToken({ userId: user._id });
+    const refreshToken = signRefreshToken({
+      userId: user._id,
+      ipAddress: ip,
+      userAgent: userAgent,
+    });
+    await refreshTokenModel.create({
+      user: user._id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      createdByIp: ip,
+    });
+    return { user, accessToken, refreshToken };
+  };
+
+  refreshToken = async (token: string, ip: string) => {
+    const decoded = verifyRefreshToken(token);
+    const existingToken = await refreshTokenModel.findOne({ token });
+    if (!existingToken) throw new Error("Token not found");
+    if (!existingToken.isActive) throw new Error("Token expired or revoked");
+    const user = await userModel.findById(decoded.userId);
+    if (!user) throw new Error("User not found");
+    const newRefreshToken = signRefreshToken({
+      userId: user._id,
+      ipAddress: ip,
+    });
+    existingToken.revokedAt = new Date();
+    existingToken.revokedByIp = ip;
+    existingToken.replacedByToken = newRefreshToken;
+    await existingToken.save();
+    await refreshTokenModel.create({
+      user: user._id,
+      token: newRefreshToken,
+      expiresAt: new Date(
+        Date.now() + parseExpiryToMs(process.env.REFRESH_TOKEN_EXPIRES!),
+      ),
+      createdByIp: ip,
+    });
+    const accessToken = signAccessToken({ userId: user._id });
+    return {
+      accessToken,
+      refreshToken: newRefreshToken,
     };
+  };
 
+  logout = async (token: string, ip: string) => {
+    const existingToken = await refreshTokenModel.findOne({ token });
+    if (!existingToken) return;
+    existingToken.revokedAt = new Date();
+    existingToken.revokedByIp = ip;
+    await existingToken.save();
+  };
 
-    logout = async (token: string, ip: string) => {
-        const existingToken = await refreshTokenModel.findOne({ token });
-        if (!existingToken) return;
-        existingToken.revokedAt = new Date();
-        existingToken.revokedByIp = ip;
-        await existingToken.save();
-    };
+  completeRegistration = async (userId: string, registrationData: any) => {
+    const user = await userModel.findById(userId);
+    if (!user) throw new Error("User not found");
+    if (!user.verificationStatus) throw new Error("User email not verified");
+
+    const { universityId, roleId, courseIds, ...profileData } =
+      registrationData;
+
+    const role = await RoleModel.findById(roleId);
+    if (!role) throw new Error("Role not found");
+
+    user.universityId = universityId;
+    user.roleId = roleId;
+    user.courseIds = courseIds;
+    await user.save();
+
+    if (role.name === "STUDENT") {
+      await StudentProfileModel.findOneAndUpdate(
+        { userId: user._id },
+        {
+          userId: user._id,
+          semesterId: profileData.semesterId,
+          hobby_badge: profileData.hobby_badge,
+          skills: profileData.skills,
+        },
+        { upsert: true, new: true },
+      );
+    } else if (role.name === "ALUMINI") {
+      await AluminiProfileModel.findOneAndUpdate(
+        { userId: user._id },
+        {
+          userId: user._id,
+          currentCompany: profileData.currentCompany,
+          jobTitle: profileData.jobTitle,
+          experienceYears: profileData.experienceYears,
+          skills: profileData.skills,
+        },
+        { upsert: true, new: true },
+      );
+    } else if (role.name === "TEACHER") {
+      await TeacherProfileModel.findOneAndUpdate(
+        { userId: user._id },
+        {
+          userId: user._id,
+          designation: profileData.designation,
+          department: profileData.department,
+          experienceYears: profileData.experienceYears,
+        },
+        { upsert: true, new: true },
+      );
+    }
+
+    return user;
+  };
+
+  deleteUser = async (userId: string) => {
+    const user = await userModel.findById(userId);
+    if (!user) throw new Error("User not found");
+    return await userModel.findByIdAndDelete(userId);
+  };
+
+  getAllUsers = async () => {
+    return await userModel.find().select("-password");
+  };
 }

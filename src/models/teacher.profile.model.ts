@@ -29,7 +29,7 @@ const teacherProfileSchema: Schema<ITeacherProfileDocument> = new Schema(
     bio: {
       type: String,
       trim: true,
-    },
+    }
   },
   {
     timestamps: true,

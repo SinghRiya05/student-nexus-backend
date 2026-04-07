@@ -22,6 +22,10 @@ const aluminiProfileSchema: Schema<IAluminiProfileDocument> = new Schema(
       trim: true,
     },
 
+    experienceYears: {
+      type: Number,
+    },
+
     skills: [{
       type: String,
       trim: true,
