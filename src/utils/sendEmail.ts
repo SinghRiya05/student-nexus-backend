@@ -9,7 +9,7 @@ interface SendEmailOptions {
   text?: string;
 }
 
-export const sendEmail = async ({to, subject, html, text}: SendEmailOptions) => {
+export const sendEmail = async ({ to, subject, html, text }: SendEmailOptions) => {
   await transporter.sendMail({
     from: `"${env.MAIL_FROM_NAME}" <${env.MAIL_USER}>`,
     to,

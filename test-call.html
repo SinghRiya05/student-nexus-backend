@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Video Call Test</title>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #111; color: #eee; padding: 20px; }
+    video { width: 400px; height: 300px; background: #000; border: 2px solid #444; border-radius: 8px; }
+    button { padding: 10px 20px; margin: 5px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    .start { background: #22c55e; color: white; }
+    .end   { background: #ef4444; color: white; }
+    input  { padding: 8px; width: 300px; border-radius: 6px; border: 1px solid #555; background: #222; color: white; }
+    label  { display: block; margin: 8px 0 4px; }
+    #log   { background: #1a1a1a; padding: 10px; border-radius: 6px; font-size: 13px; height: 150px; overflow-y: auto; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>🎥 Video Call Tester</h2>
+
+  <label>Backend URL:</label>
+  <input id="backendUrl" value="http://localhost:5000" />
+
+  <label>Your JWT Token:</label>
+  <input id="token" placeholder="Paste your access token here" />
+
+  <label>Target User ID (to call):</label>
+  <input id="targetUserId" placeholder="Paste the other user's MongoDB _id" />
+
+  <br/><br/>
+  <button class="start" onclick="connect()">🔌 Connect Socket</button>
+  <button class="start" onclick="startCall()">📞 Start Video Call</button>
+  <button class="end"   onclick="endCall()">❌ End Call</button>
+  <button class="start" onclick="shareScreen()">🖥️ Share Screen</button>
+
+  <br/><br/>
+  <div style="display:flex; gap:20px;">
+    <div><p>My Video</p><video id="localVideo" autoplay muted></video></div>
+    <div><p>Remote Video</p><video id="remoteVideo" autoplay></video></div>
+  </div>
+
+  <div id="log"></div>
+
+<script>
+  let socket, localStream, peerConnection, myUserId;
+  const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
+  function log(msg) {
+    const el = document.getElementById("log");
+    el.innerHTML += `<div>${new Date().toLocaleTimeString()} — ${msg}</div>`;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function connect() {
+    const url   = document.getElementById("backendUrl").value;
+    const token = document.getElementById("token").value;
+    if (!token) return alert("Paste your JWT token first!");
+
+    // Force WebSocket transport — skip XHR polling to avoid xhr post errors
+    socket = io(url, {
+      auth: { token },
+      transports: ["websocket"],
+    });
+
+    socket.on("connect", () => {
+      myUserId = socket.id;
+      log(`✅ Connected! Socket ID: ${socket.id}`);
+    });
+
+    socket.on("connect_error", (e) => log(`❌ Connection error: ${e.message}`));
+    socket.on("disconnect", (reason) => log(`⚠️ Disconnected: ${reason}`));
+
+    // --- Incoming Call ---
+    socket.on("call_user", async ({ signal, from, name, type }) => {
+      log(`📞 Incoming ${type} call from ${name} (${from})`);
+      if (!confirm(`Incoming ${type} call from ${name}. Accept?`)) return endCall();
+
+      localStream = await navigator.mediaDevices.getUserMedia({ video: type === "video", audio: true });
+      document.getElementById("localVideo").srcObject = localStream;
+
+      peerConnection = new RTCPeerConnection(config);
+      localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+
+      peerConnection.ontrack = (e) => {
+        document.getElementById("remoteVideo").srcObject = e.streams[0];
+        log("✅ Remote stream connected!");
+      };
+
+      peerConnection.onicecandidate = (e) => {
+        if (e.candidate) socket.emit("ice_candidate", { to: from, candidate: e.candidate });
+      };
+
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+
+      socket.emit("answer_call", { to: from, signal: answer });
+      log("📤 Call answered!");
+    });
+
+    // --- Call Accepted ---
+    socket.on("call_accepted", async (signal) => {
+      log("✅ Call accepted by remote peer!");
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+    });
+
+    // --- ICE candidate ---
+    socket.on("ice_candidate", async (candidate) => {
+      try {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch {}
+    });
+
+    // --- Call Ended ---
+    socket.on("call_ended", () => {
+      log("📵 Call ended by remote user.");
+      endCall();
+    });
+
+    // --- Screen share status ---
+    socket.on("screen_share_status", ({ isSharing }) => {
+      log(`🖥️ Remote user ${isSharing ? "started" : "stopped"} screen sharing.`);
+    });
+  }
+
+  async function startCall() {
+    const targetId = document.getElementById("targetUserId").value.trim();
+    if (!socket) return alert("Connect the socket first!");
+    if (!targetId) return alert("Enter the target user's MongoDB ID!");
+
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    document.getElementById("localVideo").srcObject = localStream;
+
+    peerConnection = new RTCPeerConnection(config);
+    localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+
+    peerConnection.ontrack = (e) => {
+      document.getElementById("remoteVideo").srcObject = e.streams[0];
+      log("✅ Remote stream connected!");
+    };
+
+    peerConnection.onicecandidate = (e) => {
+      if (e.candidate) socket.emit("ice_candidate", { to: targetId, candidate: e.candidate });
+    };
+
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+
+    socket.emit("call_user", {
+      userToCall: targetId,
+      signalData: offer,
+      from: socket.id,
+      name: "Test User",
+      type: "video",
+    });
+
+    log(`📤 Call sent to user: ${targetId}`);
+  }
+
+  async function shareScreen() {
+    const targetId = document.getElementById("targetUserId").value.trim();
+    if (!socket) return alert("Connect the socket first!");
+
+    // Allow screen sharing even without a peer connection — for local preview
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    const screenTrack  = screenStream.getVideoTracks()[0];
+
+    // Show screen in local "My Video" box immediately
+    document.getElementById("localVideo").srcObject = screenStream;
+    log("🖥️ Screen sharing started — preview visible in My Video.");
+
+    // Replace the video track in the peer connection if call is active
+    if (peerConnection) {
+      const sender = peerConnection.getSenders().find(s => s.track?.kind === "video");
+      if (sender) {
+        sender.replaceTrack(screenTrack);
+        log("📡 Screen stream sent to remote peer.");
+      }
+      if (targetId) socket.emit("screen_share_toggle", { to: targetId, isSharing: true });
+    }
+
+    // When the user stops sharing (clicks browser's "Stop sharing" button)
+    screenTrack.onended = () => {
+      // Restore camera in local preview
+      if (localStream) {
+        document.getElementById("localVideo").srcObject = localStream;
+      }
+      // Restore camera track in peer connection
+      if (peerConnection && localStream) {
+        const sender = peerConnection.getSenders().find(s => s.track?.kind === "video");
+        const camTrack = localStream.getVideoTracks()[0];
+        if (sender && camTrack) sender.replaceTrack(camTrack);
+      }
+      if (socket && targetId) socket.emit("screen_share_toggle", { to: targetId, isSharing: false });
+      log("🖥️ Screen sharing stopped — camera restored.");
+    };
+  }
+
+  function endCall() {
+    const targetId = document.getElementById("targetUserId").value.trim();
+    if (socket && targetId) socket.emit("end_call", { to: targetId });
+    if (peerConnection) { peerConnection.close(); peerConnection = null; }
+    if (localStream)    localStream.getTracks().forEach(t => t.stop());
+    document.getElementById("localVideo").srcObject  = null;
+    document.getElementById("remoteVideo").srcObject = null;
+    log("📵 Call ended.");
+  }
+</script>
+</body>
+</html>

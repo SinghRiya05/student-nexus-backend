@@ -50,8 +50,7 @@ const userSchema = new Schema<IUser>(
 
     universityId: {
       type: Types.ObjectId,
-      ref: "University",
-      required: true
+      ref: "University"
     },
 
     courseIds: [{
@@ -66,8 +65,7 @@ const userSchema = new Schema<IUser>(
 
     roleId: {
       type: Types.ObjectId,
-      ref: "Role",
-      required: true
+      ref: "Role"
     },
 
     verificationStatus: {
@@ -89,6 +87,11 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ["ACTIVE", "INACTIVE"],
       default: "INACTIVE"
+    },
+
+    isPrivate: {
+      type: Boolean,
+      default: false
     },
 
     isDeleted: {

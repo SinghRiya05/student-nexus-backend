@@ -9,6 +9,10 @@ import universityRouter from "../masterRoutes/university.route";
 import courseRouter from "../masterRoutes/course.routes";
 import universityCourseRouter from "../masterRoutes/university-course.routes";
 import semesterRouter from "../masterRoutes/semester.routes";
+import authRouter from "../masterRoutes/auth.routes";
+import followRouter from "../masterRoutes/follow.routes";
+import chatRouter from "../masterRoutes/chat.routes";
+import { middleware as authMiddleware } from "../../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -22,5 +26,8 @@ router.use("/university", universityRouter);
 router.use("/course", courseRouter);
 router.use("/university-course", universityCourseRouter);
 router.use("/semester", semesterRouter);
+router.use("/auth", authRouter);
+router.use("/follow", authMiddleware, followRouter);
+router.use("/chat", authMiddleware, chatRouter);
 
 export default router;

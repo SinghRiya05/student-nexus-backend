@@ -39,9 +39,12 @@ const envSchema = z.object({
   MAIL_PORT: z.coerce.number().min(1).max(65535),
   MAIL_USER: z.string().email(),
   MAIL_PASS: z.string().min(6),
-  MAIL_FROM_NAME: z.string().default("Itinerary Builder"),
+  MAIL_FROM_NAME: z.string().default("Student Nexus"),
 
   FRONTEND_URL: z.string().url(),
+  
+  REDIS_HOST: z.string().default("127.0.0.1"),
+  REDIS_PORT: z.coerce.number().default(6379),
 });
 
 const env = envSchema.parse(process.env);

@@ -28,7 +28,7 @@ export const sendErrorResponse = (res: any, code: number, message: string) => {
 }
 
 
-export const sendErrorsResponse = (res: any, code: number, messages: string[]) => {
+export const sendErrorsResponse = (res: any, code: number, messages: any[]) => {
     return res.status(code).json({
         success: false,
         code: code,

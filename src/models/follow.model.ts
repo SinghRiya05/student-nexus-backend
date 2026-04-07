@@ -12,6 +12,12 @@ const followSchema = new Schema<IFollow>(
       type: Types.ObjectId,
       ref: "User",
       required: true
+    },
+    status: {
+      type: String,
+      enum: ["PENDING", "ACCEPTED"],
+      default: "PENDING",
+      required: true
     }
   },
   { timestamps: true }

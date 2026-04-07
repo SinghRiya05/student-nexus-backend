@@ -11,7 +11,7 @@ if(!authHeader||!authHeader.startsWith("Bearer ")){
 const token=authHeader.split(" ")[1];
 const decoded= verifyAccessToken(token);
 const user=await userModel.findById(decoded.userId);
-if(!user) throw new ApiError("User not found",404);
-req.user=user;
-next();
+    if (!user) throw new ApiError("User not found", 404);
+    (req as any).user = user;
+    next();
 }

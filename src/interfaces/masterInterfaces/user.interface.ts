@@ -19,6 +19,7 @@ export interface IUser {
 
   verificationStatus: boolean;
   status: STATUS;
+  isPrivate: boolean;
 
   followersCount: number;
   followingCount: number;

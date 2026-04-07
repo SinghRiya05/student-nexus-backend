@@ -11,6 +11,11 @@ const studentProfileSchema: Schema<IStudentProfileDocument> = new Schema(
       required: true,
       unique: true,
     },
+    
+    semesterId: {
+      type: Schema.Types.ObjectId,
+      ref: "Semester",
+    },
 
     hobby_badge: {
       type: String,
@@ -22,16 +27,10 @@ const studentProfileSchema: Schema<IStudentProfileDocument> = new Schema(
       trim: true,
     }],
 
-    trustScore: {
-      type: Number,
-      default: 0,
-    },
-
     skills: [{
       type: String,
       trim: true,
     }]
-    
   },
   {
     timestamps: true,
