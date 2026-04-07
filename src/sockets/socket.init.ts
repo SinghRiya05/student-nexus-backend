@@ -15,7 +15,6 @@ export const setupSocket = (server: any) => {
   const io = new Server(server, {
     cors: {
       origin: (origin, callback) => {
-        // Allow requests with no origin (file://, Postman, mobile apps)
         if (!origin) return callback(null, true);
         if (allowedOrigins.includes(origin)) return callback(null, true);
         return callback(new Error("Socket.io CORS: Origin not allowed"));
@@ -24,7 +23,7 @@ export const setupSocket = (server: any) => {
     },
   });
 
-  // Connect Redis and set adapter — dynamic import so server doesn't crash if package is missing
+
   connectRedis().then(async (isConnected) => {
     if (isConnected) {
       try {
@@ -39,12 +38,10 @@ export const setupSocket = (server: any) => {
     }
   });
 
-  // JWT Authentication Middleware for Sockets
+
   io.use(async (socket, next) => {
     try {
-      const token =
-        socket.handshake.auth?.token ||
-        socket.handshake.headers?.authorization?.split(" ")[1];
+      const token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(" ")[1];
 
       if (!token) {
         return next(new Error("Authentication error: No token provided"));
@@ -68,10 +65,8 @@ export const setupSocket = (server: any) => {
     const user = (socket as any).user;
     console.log(`User connected: ${user.firstName} [${socket.id}]`);
 
-    // Join personal room to receive private notifications
     socket.join(user._id.toString());
 
-    // Register feature handlers
     chatSocketHandler(io, socket);
     callSocketHandler(io, socket);
 

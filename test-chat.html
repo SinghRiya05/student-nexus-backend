@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat Test Client</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --success: #22c55e;
+            --border: #334155;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Header / Settings --- */
+        header {
+            padding: 1rem 2rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input {
+            background: #00000044;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        button.primary { background: var(--primary); color: white; }
+        button.success { background: var(--success); color: white; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* --- Main Layout --- */
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* --- Sidebar --- */
+        #sidebar {
+            width: 300px;
+            border-right: 1px solid var(--border);
+            background: #111827;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        #chat-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-item {
+            padding: 1rem;
+            border-bottom: 1px solid #1e293b;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .chat-item:hover { background: #1e293b; }
+        .chat-item.active { background: #334155; border-left: 3px solid var(--primary); }
+        .chat-item h4 { margin: 0; font-size: 0.95rem; }
+        .chat-item p { margin: 4px 0 0; font-size: 0.8rem; color: var(--text-muted); }
+
+        /* --- Chat Area --- */
+        #chat-window {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-dark);
+        }
+
+        #messages {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            font-size: 0.9rem;
+            position: relative;
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            background: var(--primary);
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        .message.received {
+            align-self: flex-start;
+            background: var(--bg-card);
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .message .meta {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        #typing-indicator {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.8rem;
+            color: var(--success);
+            height: 20px;
+        }
+
+        /* --- Input Area --- */
+        #input-area {
+            padding: 1rem 1.5rem;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 1rem;
+        }
+
+        #message-input { flex: 1; }
+
+        /* --- Status Bar --- */
+        #status-bar {
+            background: #000;
+            font-size: 0.75rem;
+            padding: 4px 20px;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="font-weight: bold; margin-right: 1rem;">💬 Chat Tester</div>
+        <input id="baseUrl" type="text" value="http://localhost:5000" placeholder="Base URL">
+        <input id="token" type="text" placeholder="JWT Access Token" style="width: 250px;">
+        <button class="primary" onclick="initApp()">Connect & Load Chats</button>
+    </header>
+
+    <main>
+        <div id="sidebar">
+            <div class="sidebar-header">
+                <input id="targetUserId" type="text" placeholder="User ID to start chat">
+                <button class="success" onclick="startNewChat()">+ Start New Chat</button>
+            </div>
+            <div id="chat-list">
+                <div style="padding: 20px; text-align: center; color: var(--text-muted);">Connect to load chats</div>
+            </div>
+        </div>
+
+        <div id="chat-window">
+            <div id="messages">
+                <div style="margin: auto; color: var(--text-muted);">Select a chat to start messaging</div>
+            </div>
+            <div id="typing-indicator"></div>
+            <div id="input-area">
+                <input id="message-input" type="text" placeholder="Type a message..." onkeypress="handleTyping(event)">
+                <button class="primary" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="status-bar">
+        <div id="socket-status">Socket: Disconnected 🔴</div>
+        <div id="user-info">Not logged in</div>
+    </div>
+
+    <script>
+        let socket;
+        let currentChatId = null;
+        let currentUser = null;
+        let typingTimeout;
+
+        function log(msg) { console.log(`[ChatTest] ${msg}`); }
+
+        async function api(path, method = 'GET', body = null) {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const token = document.getElementById('token').value;
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+            if (body) options.body = JSON.stringify(body);
+            
+            const res = await fetch(`${baseUrl}${path}`, options);
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message || 'API Error');
+            return json.data;
+        }
+
+        async function initApp() {
+            try {
+                const token = document.getElementById('token').value;
+                if (!token) return alert('Please enter a JWT token');
+
+                // 1. Connect Socket
+                const baseUrl = document.getElementById('baseUrl').value;
+                if (socket) socket.disconnect();
+
+                socket = io(baseUrl, {
+                    auth: { token },
+                    transports: ['websocket']
+                });
+
+                socket.on('connect', () => {
+                    document.getElementById('socket-status').innerHTML = `Socket: Connected 🟢 (ID: ${socket.id})`;
+                });
+
+                socket.on('connect_error', (err) => {
+                    document.getElementById('socket-status').innerHTML = `Socket: Error 🔴 (${err.message})`;
+                });
+
+                socket.on('message_received', (newMessage) => {
+                    if (newMessage.chat._id === currentChatId) {
+                        appendMessage(newMessage);
+                        scrollToBottom();
+                    }
+                    loadChatList(); // Refresh list to show latest message
+                });
+
+                socket.on('typing', (room) => {
+                    if (room === currentChatId) {
+                        document.getElementById('typing-indicator').innerText = 'Someone is typing...';
+                    }
+                });
+
+                socket.on('stop_typing', (room) => {
+                    if (room === currentChatId) {
+                        document.getElementById('typing-indicator').innerText = '';
+                    }
+                });
+
+                // 2. Fetch Chat List
+                await loadChatList();
+                
+                // Identify self (just grab from first chat if possible or we'd need a /me endpoint)
+                // For now we'll just say "Connected"
+                document.getElementById('user-info').innerText = `Token Active`;
+
+            } catch (err) {
+                alert(`Init failed: ${err.message}`);
+            }
+        }
+
+        async function loadChatList() {
+            const chats = await api('/api/v1/chat');
+            const listEl = document.getElementById('chat-list');
+            listEl.innerHTML = '';
+
+            chats.forEach(chat => {
+                const item = document.createElement('div');
+                item.className = `chat-item ${chat._id === currentChatId ? 'active' : ''}`;
+                item.onclick = () => selectChat(chat._id, chat.chatName || 'Direct Message');
+                
+                const name = chat.isGroupChat ? chat.chatName : chat.users.find(u => u._id !== currentUser?._id)?.firstName || 'Chat';
+                const lastMsg = chat.latestMessage ? chat.latestMessage.content : 'No messages yet';
+
+                item.innerHTML = `
+                    <h4>${name} ${chat.isGroupChat ? '👥' : '👤'}</h4>
+                    <p>${lastMsg.substring(0, 30)}${lastMsg.length > 30 ? '...' : ''}</p>
+                `;
+                listEl.appendChild(item);
+            });
+        }
+
+        async function selectChat(chatId, name) {
+            currentChatId = chatId;
+            document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+            // Find the item and add active class (simple way)
+            loadChatList(); 
+
+            socket.emit('join_chat', chatId);
+            
+            const messages = await api(`/api/v1/chat/messages/${chatId}`);
+            const msgEl = document.getElementById('messages');
+            msgEl.innerHTML = '';
+            
+            messages.forEach(msg => appendMessage(msg));
+            scrollToBottom();
+        }
+
+        async function startNewChat() {
+            const userId = document.getElementById('targetUserId').value;
+            if (!userId) return alert('Enter a User ID');
+            try {
+                const chat = await api('/api/v1/chat', 'POST', { userId });
+                await loadChatList();
+                selectChat(chat._id);
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        function appendMessage(msg) {
+            const container = document.getElementById('messages');
+            const div = document.createElement('div');
+            // Basic detection of self (this is a bit hacky since we don't have user object easily available here without a /me call)
+            // We'll just assume if it has sender info and we don't know who we are, we'll try to find out
+            const isMe = msg.sender._id === socket.id; // This won't work perfectly without real Auth ID
+            
+            div.className = `message received`; // Default to received for safety in this simple tester
+            
+            div.innerHTML = `
+                <span class="meta">${msg.sender.firstName} • ${new Date(msg.createdAt).toLocaleTimeString()}</span>
+                ${msg.content}
+            `;
+            container.appendChild(div);
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const content = input.value.trim();
+            if (!content || !currentChatId) return;
+
+            socket.emit('new_message', {
+                chatId: currentChatId,
+                content: content
+            });
+
+            socket.emit('stop_typing', currentChatId);
+            input.value = '';
+        }
+
+        function handleTyping(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+                return;
+            }
+
+            if (!socket || !currentChatId) return;
+
+            socket.emit('typing', currentChatId);
+            
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                socket.emit('stop_typing', currentChatId);
+            }, 2000);
+        }
+
+        function scrollToBottom() {
+            const el = document.getElementById('messages');
+            el.scrollTop = el.scrollHeight;
+        }
+    </script>
+</body>
+</html>

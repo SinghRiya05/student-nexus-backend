@@ -60,6 +60,9 @@ if (process.env.NODE_ENV === "dev") {
   app.get("/test-call", (_req, res) => {
     res.sendFile(path.join(process.cwd(), "test-call.html"));
   });
+  app.get("/test-chat", (_req, res) => {
+    res.sendFile(path.join(process.cwd(), "test-chat.html"));
+  });
 }
 
 app.use(errorHandler);
