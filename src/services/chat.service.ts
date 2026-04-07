@@ -4,9 +4,8 @@ import { messageModel } from "../models/message.model";
 import { ApiError } from "../core/ApiError";
 
 export class ChatService {
-  /**
-   * Access or create a 1:1 chat
-   */
+  
+  // ----- ACCESS OR CREATE CHAT -----
   async accessChat(currentUserId: string, targetUserId: string) {
     // Find 1:1 chat between these two users
     let isChat: any = await chatModel.find({
@@ -46,9 +45,7 @@ export class ChatService {
     }
   }
 
-  /**
-   * Create a group chat
-   */
+  // ----- CREATE GROUP CHAT -----
   async createGroupChat(name: string, users: string[], adminId: string) {
     if (!users || !name) {
       throw new ApiError("Please fill all the fields", 400);
@@ -79,16 +76,9 @@ export class ChatService {
     }
   }
 
-  /**
-   * Send a message
-   */
-  async sendMessage(
-    senderId: string,
-    chatId: string,
-    content: string,
-    messageType: string = "text",
-    attachments: any[] = []
-  ) {
+
+  // ----- SEND MESSAGE -----
+  async sendMessage(senderId: string, chatId: string, content: string, messageType: string = "text", attachments: any[] = []) {
     if (!content && attachments.length === 0) {
       throw new ApiError("Invalid data passed into request", 400);
     }
@@ -123,9 +113,7 @@ export class ChatService {
     }
   }
 
-  /**
-   * Get all chats for a user
-   */
+  // ----- FETCH CHATS -----
   async fetchChats(userId: string) {
     try {
       const results = await chatModel
@@ -146,9 +134,7 @@ export class ChatService {
     }
   }
 
-  /**
-   * Get all messages for a chat (sorted oldest → newest)
-   */
+  // ----- FETCH MESSAGES -----
   async fetchMessages(chatId: string) {
     try {
       const messages = await messageModel

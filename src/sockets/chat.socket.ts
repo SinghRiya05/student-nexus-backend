@@ -6,17 +6,14 @@ const chatService = new ChatService();
 export const chatSocketHandler = (io: Server, socket: Socket) => {
   const user = (socket as any).user;
 
-  /**
-   * User joins a specific chat room
-   */
+  // ----- JOIN CHAT -----
   socket.on("join_chat", (room: string) => {
     socket.join(room);
     console.log(`User ${user.firstName} joined room: ${room}`);
   });
 
-  /**
-   * Send a new message
-   */
+
+  // ----- SEND MESSAGE -----
   socket.on("new_message", async (data: { chatId: string; content: string; messageType?: string; attachments?: any[] }) => {
     try {
       const { chatId, content, messageType, attachments } = data;
@@ -40,9 +37,8 @@ export const chatSocketHandler = (io: Server, socket: Socket) => {
     }
   });
 
-  /**
-   * Typing Indicators
-   */
+
+  // ----- TYPING INDICATORS -----
   socket.on("typing", (room: string) => {
     socket.in(room).emit("typing", room);
   });
@@ -51,9 +47,8 @@ export const chatSocketHandler = (io: Server, socket: Socket) => {
     socket.in(room).emit("stop_typing", room);
   });
 
-  /**
-   * Message Seen / Read Receipt
-   */
+
+  // ----- MESSAGE SEEN / READ RECEIPT -----
   socket.on("message_seen", async (data: { messageId: string; chatId: string }) => {
     try {
       // Logic to update database 'readBy' can be added here if needed

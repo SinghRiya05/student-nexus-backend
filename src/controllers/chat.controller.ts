@@ -6,9 +6,8 @@ import { sendSuccessResponse, sendCreatedResponse } from "../core/responses";
 const chatService = new ChatService();
 
 export class ChatController {
-  /**
-   * Access or create a 1:1 chat
-   */
+  
+  // ----- ACCESS OR CREATE CHAT -----
   accessChat = catchAsync(async (req: Request, res: Response) => {
     const { userId } = req.body;
     const currentUserId = (req as any).user._id;
@@ -17,18 +16,16 @@ export class ChatController {
     return sendSuccessResponse(res, chat, "Chat accessed successfully");
   });
 
-  /**
-   * Fetch all chats for the logged in user
-   */
+
+  // ----- FETCH ALL CHATS -----
   fetchChats = catchAsync(async (req: Request, res: Response) => {
     const userId = (req as any).user._id;
     const chats = await chatService.fetchChats(userId);
     return sendSuccessResponse(res, chats, "Chats fetched successfully");
   });
 
-  /**
-   * Create a group chat
-   */
+
+  // ----- CREATE GROUP CHAT -----
   createGroupChat = catchAsync(async (req: Request, res: Response) => {
     const { users, name } = req.body;
     const adminId = (req as any).user._id;
@@ -37,18 +34,16 @@ export class ChatController {
     return sendCreatedResponse(res, groupChat, "Group chat created successfully");
   });
 
-  /**
-   * Fetch messages for a specific chat
-   */
+
+  // ----- FETCH MESSAGES -----
   fetchMessages = catchAsync(async (req: Request, res: Response) => {
     const { chatId } = req.params;
     const messages = await chatService.fetchMessages(chatId as string);
     return sendSuccessResponse(res, messages, "Messages fetched successfully");
   });
 
-  /**
-   * Send a message via REST API (Alternative to Socket)
-   */
+
+  // ----- SEND MESSAGE -----
   sendMessage = catchAsync(async (req: Request, res: Response) => {
     const { chatId, content, messageType, attachments } = req.body;
     const senderId = (req as any).user._id;
