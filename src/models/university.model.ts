@@ -19,6 +19,7 @@ const universitySchema: Schema<IUniversityDocument> = new Schema(
       unique: true,
       sparse: true,
       trim: true,
+      uppercase: true,
     },
 
     image: {

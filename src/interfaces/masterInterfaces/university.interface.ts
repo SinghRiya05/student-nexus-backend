@@ -4,8 +4,8 @@ import { STATUS } from "../../config";
 
 export interface IUniversity {
     name: string;
-    short_name?: string;
-    domain?: string;
+    short_name: string;
+    domain: string;
     country: Types.ObjectId;
     state: Types.ObjectId;
     city: Types.ObjectId;
@@ -13,8 +13,8 @@ export interface IUniversity {
     isDeleted: boolean;
     status: STATUS;
     isActive: boolean;
-    description?: string;
-    image?: string;
-    logo?: string;
-    courses?: Types.ObjectId[];
+    description: string;
+    image: string;
+    logo: string;
+    courses: Types.ObjectId[];
 }

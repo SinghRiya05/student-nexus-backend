@@ -11,11 +11,11 @@ export class UniversityService {
     }
 
     getAllUniversities = async () => {
-        return await UniversityModel.find();
+        return await UniversityModel.find().populate("country", "name id").populate("state", "name id").populate("city", "name id");
     }
 
     getUniversityById = async (id: string) => {
-        const existingUniversity = await UniversityModel.findById(id);
+        const existingUniversity = await UniversityModel.findById(id).populate("country", "name id").populate("state", "name id").populate("city", "name id");
         if (!existingUniversity) throw new NotFoundError("University not found");
         return existingUniversity;
     }

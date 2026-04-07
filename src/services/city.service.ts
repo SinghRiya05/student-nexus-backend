@@ -23,13 +23,13 @@ export class CityService {
     };
 
     findById = async (id: string): Promise<ICity> => {
-        const city = await CityModel.findById(id);
+        const city = await CityModel.findById(id).populate("stateId");
         if (!city) throw new NotFoundError("City not found");
         return city;
     };
 
     findAll = async (): Promise<ICity[]> => {
-        const cities = await CityModel.find();
+        const cities = await CityModel.find().populate("stateId");
         return cities;
     }
 

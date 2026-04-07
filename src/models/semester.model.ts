@@ -15,7 +15,7 @@ const semesterSchema: Schema<ISemesterDocument> = new Schema(
     number: {
       type: Number,
       required: true,
-      unique: true,
+
     },
 
     description: {
@@ -39,6 +39,8 @@ const semesterSchema: Schema<ISemesterDocument> = new Schema(
     timestamps: true,
   }
 );
+
+semesterSchema.index({ number: 1, courseId: 1 }, { unique: true });
 
 const SemesterModel = mongoose.model<ISemesterDocument>("Semester", semesterSchema);
 

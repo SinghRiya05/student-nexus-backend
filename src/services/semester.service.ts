@@ -16,13 +16,13 @@ export class SemesterService {
     }
 
     getAllSemesters = async () => {
-        return await SemesterModel.find();
+        return await SemesterModel.find().populate("courseId");
     }
 
     getSemesterById = async (id: string) => {
         const existingSemester = await SemesterModel.findById(id);
         if (!existingSemester) throw new NotFoundError("Semester not found");
-        return existingSemester;
+        return existingSemester.populate("courseId");
     }
 
     updateSemester = async (id: string, semesterData: Partial<ISemester>) => {
