@@ -11,10 +11,10 @@ authRouter.post("/register", validateRequest(registerSchema), authController.reg
 authRouter.post("/resend-otp", validateRequest(resendOtpSchema), authController.resendOtp);
 authRouter.post("/verify-email", validateRequest(verifyEmailSchema), authController.verifyEmail);
 authRouter.post("/login", validateRequest(loginSchema), authController.login);
-authRouter.post("/complete-registration", authMiddleware, validateRequest(completeRegistrationSchema), authController.completeRegistration);
+authRouter.post("/complete-registration", validateRequest(completeRegistrationSchema), authController.completeRegistration);
 authRouter.post("/refresh-token", authController.refreshToken);
 authRouter.post("/logout", authMiddleware, authController.logout);
-authRouter.delete("/delete-user/:id", authMiddleware, authController.deleteUser);
+authRouter.delete("/delete-user/:id", authController.deleteUser);
 authRouter.get("/get-all-users", authMiddleware, authController.getAllUsers);
 authRouter.patch("/toggle-privacy", authMiddleware, authController.togglePrivacy);
 

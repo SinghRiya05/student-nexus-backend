@@ -35,6 +35,9 @@ export const resendOtpSchema = z.object({
 
 export const completeRegistrationSchema = z.object({
   body: z.object({
+    userId: z.string().refine(objectIdValidation, {
+      message: "Invalid user ID",
+    }),
     universityId: z.string().refine(objectIdValidation, {
       message: "Invalid university ID",
     }),

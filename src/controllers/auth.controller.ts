@@ -25,12 +25,9 @@ export class AuthController {
         const ip = req.ip || "";
         const userAgent = req.headers["user-agent"] || "";
         
-        const { user, accessToken, refreshToken } = await authService.verifyEmail(email, otp, ip, userAgent);
+        const user = await authService.verifyEmail(email, otp, ip, userAgent);
         
-        sendAccessTokenCookie(res, accessToken);
-        sendRefreshTokenCookie(res, refreshToken);
-        
-        sendResponse(res, STATUS_CODES.SUCCESS, true, "Email verified successfully.", { user, accessToken, refreshToken });
+        sendResponse(res, STATUS_CODES.SUCCESS, true, "Email verified successfully.", user);
     });
 
     login = catchAsync(async (req: Request, res: Response) => {
@@ -47,9 +44,16 @@ export class AuthController {
     });
 
     completeRegistration = catchAsync(async (req: Request, res: Response) => {
-        const userId = (req as any).user?._id;
-        const user = await authService.completeRegistration(userId, req.body);
-        sendResponse(res, STATUS_CODES.SUCCESS, true, "Registration completed successfully.", user);
+        const { userId, ...registrationData } = req.body;
+        const ip = req.ip || "";
+        const userAgent = req.headers["user-agent"] || "";
+        
+        const { user, accessToken, refreshToken } = await authService.completeRegistration(userId, registrationData, ip, userAgent);
+        
+        sendAccessTokenCookie(res, accessToken);
+        sendRefreshTokenCookie(res, refreshToken);
+        
+        sendResponse(res, STATUS_CODES.SUCCESS, true, "Registration completed successfully.", { user, accessToken, refreshToken });
     });
 
     refreshToken = catchAsync(async (req: Request, res: Response) => {
