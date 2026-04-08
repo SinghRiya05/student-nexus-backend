@@ -2,6 +2,7 @@ import UniversityCourseModel from "../models/university-course.model";
 import UniversityModel from "../models/university.model";
 import { CourseModel } from "../models/course.model";
 import { ConflictError, NotFoundError } from "../core/errors";
+import { Types } from "mongoose";
 
 export class UniversityCourseService {
 
@@ -21,16 +22,42 @@ export class UniversityCourseService {
         });
     }
 
-    bulkAssignCourses = async (universityId: string, courseIds: string[]) => {
+    syncUniversityCoursesService = async (
+        universityId: string,
+        courseIds: string[]
+    ) => {
         const university = await UniversityModel.findById(universityId);
         if (!university) throw new NotFoundError("University not found");
-        const data = courseIds.map(courseId => ({
+        const existingMappings = await UniversityCourseModel.find({
             universityId,
-            courseId
-        }));
-        return await UniversityCourseModel.insertMany(data, {
-            ordered: false
         });
+        const existingCourseIds = existingMappings.map((m) =>
+            m.courseId.toString()
+        );
+        const existingSet = new Set(existingCourseIds);
+        const newSet = new Set(courseIds);
+        const toAdd = courseIds.filter((id) => !existingSet.has(id));
+        const toRemove = existingCourseIds.filter((id) => !newSet.has(id));
+        if (toAdd.length > 0) {
+            const newData = toAdd.map((courseId) => ({
+                universityId: new Types.ObjectId(universityId),
+                courseId: new Types.ObjectId(courseId),
+            }));
+            await UniversityCourseModel.insertMany(newData, {
+                ordered: false,
+            });
+        }
+        if (toRemove.length > 0) {
+            await UniversityCourseModel.deleteMany({
+                universityId,
+                courseId: { $in: toRemove },
+            });
+        }
+        return {
+            added: toAdd,
+            removed: toRemove,
+            totalAssigned: courseIds.length,
+        };
     };
 
     getCoursesByUniversity = async (universityId: string) => {

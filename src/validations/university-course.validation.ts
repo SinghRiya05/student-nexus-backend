@@ -24,3 +24,14 @@ export const universityCourseIdParamsSchema = z.object({
     }),
   }),
 });
+
+export const syncUniversityCoursesSchema = z.object({
+  body: z.object({
+    universityId: z.string().refine(objectIdValidation, {
+      message: "Invalid university ID",
+    }),
+    courseIds: z.array(z.string().refine(objectIdValidation, {
+      message: "Invalid course ID",
+    })),
+  }),
+});
