@@ -101,4 +101,22 @@ export class AuthController {
 
         sendResponse(res, STATUS_CODES.SUCCESS, true, `Account is now ${user.isPrivate ? "Private" : "Public"}.`, { isPrivate: user.isPrivate });
     });
+
+    forgotPassword = catchAsync(async (req: Request, res: Response) => {
+        const { email } = req.body;
+        await authService.forgotPassword(email);
+        sendResponse(res, STATUS_CODES.SUCCESS, true, "Reset OTP has been sent to your email.");
+    });
+
+    resetPassword = catchAsync(async (req: Request, res: Response) => {
+        const { email, otp, newPassword } = req.body;
+        await authService.resetPassword(email, otp, newPassword);
+        sendResponse(res, STATUS_CODES.SUCCESS, true, "Password has been reset successfully.");
+    });
+
+    verifyResetOtp = catchAsync(async (req: Request, res: Response) => {
+        const { email, otp } = req.body;
+        await authService.verifyResetOtp(email, otp);
+        sendResponse(res, STATUS_CODES.SUCCESS, true, "Reset OTP verified successfully.");
+    });
 }

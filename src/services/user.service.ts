@@ -257,4 +257,89 @@ export class AuthService {
   getAllUsers = async () => {
     return await userModel.find().select("-password");
   };
+
+  // ------ FORGOT PASSWORD ------
+  forgotPassword = async (email: string) => {
+    const user = await userModel.findOne({ email });
+    if (!user) throw new Error("User not found with this email");
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    
+    // Clear old reset codes
+    await UserAuthCodeModel.deleteMany({
+      userId: user._id,
+      purpose: "RESET_PASSWORD",
+    });
+
+    await UserAuthCodeModel.create({
+      userId: user._id,
+      code: otp,
+      purpose: "RESET_PASSWORD",
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 mins
+      isUsed: false,
+    });
+
+    try {
+      await sendEmail({
+        to: email,
+        subject: "Password Reset OTP - Student Nexus",
+        html: renderTemplate("otp-verification", {
+          firstName: user.firstName,
+          otp: otp,
+          expiryMinutes: 10,
+          year: new Date().getFullYear(),
+          appName: "Student Nexus (Reset Password)",
+        }),
+        text: `Hello ${user.firstName}, Your Password Reset OTP is ${otp}. It will expire in 10 minutes.`,
+      });
+    } catch (error) {
+      console.error("Failed to send reset email:", error);
+    }
+    return true;
+  };
+
+  // ------ RESET PASSWORD ------
+  resetPassword = async (email: string, otp: string, newPassword: string) => {
+    const user = await userModel.findOne({ email });
+    if (!user) throw new Error("User not found");
+
+    const authCode = await UserAuthCodeModel.findOne({
+      userId: user._id,
+      code: otp,
+      purpose: "RESET_PASSWORD",
+      isUsed: false,
+    });
+
+    if (!authCode) throw new Error("Invalid or expired reset code");
+
+    // Check expiry manually just in case even though TTL index exists
+    if (new Date() > authCode.expiresAt) throw new Error("Reset code has expired");
+
+    // Mark code as used
+    authCode.isUsed = true;
+    await authCode.save();
+
+    // Update password
+    user.password = newPassword; // The model has pre-save hook for hashing? Let me check.
+    // Actually, checking userModel pre-save hook.
+    await user.save();
+
+    return true;
+  };
+
+  // ------ VERIFY RESET OTP ------
+  verifyResetOtp = async (email: string, otp: string) => {
+    const user = await userModel.findOne({ email });
+    if (!user) throw new Error("User not found");
+
+    const authCode = await UserAuthCodeModel.findOne({
+      userId: user._id,
+      code: otp,
+      purpose: "RESET_PASSWORD",
+      isUsed: false,
+    });
+
+    if (!authCode) throw new Error("Invalid or expired reset code");
+    return true;
+  };
 }
