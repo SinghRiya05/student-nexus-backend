@@ -24,8 +24,13 @@ export class AuthService {
     const { email } = userData;
     const existingUser = await userModel.findOne({ email });
     if (existingUser) throw new Error("User already exists");
+
+    const studentRole = await RoleModel.findOne({ name: "STUDENT" });
+    if (!studentRole) throw new Error("Default Student role not found");
+
     const user = await userModel.create({
       ...userData,
+      roleId: studentRole._id,
       verificationStatus: false,
     });
     const otp = crypto.randomInt(100000, 999999).toString();
@@ -117,47 +122,22 @@ export class AuthService {
     await authCode.save();
     user.verificationStatus = true;
     await user.save();
-    const accessToken = signAccessToken({ userId: user._id });
-    const refreshToken = signRefreshToken({
-      userId: user._id,
-      ipAddress: ip,
-      userAgent: userAgent,
-    });
-    await refreshTokenModel.create({
-      user: user._id,
-      token: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      createdByIp: ip,
-    });
 
-    return { user, accessToken, refreshToken };
+    return user;
   };
 
   // ------ LOGIN USER ------
-  loginUser = async (
-    email: string,
-    password: string,
-    ip: string,
-    userAgent: string,
-  ) => {
+  loginUser = async ( email: string, password: string, ip: string, userAgent: string ) => {
     const user = await userModel.findOne({ email }).select("+password");
     if (!user) throw new Error("User not found");
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) throw new Error("Invalid password");
-    if (!user.verificationStatus) throw new Error("User not verified");
+    if (!user.verificationStatus) throw new Error("User not verified. Please verify your email.");
+    if (user.status !== "ACTIVE") throw new Error("User account is not active. Please complete registration or contact administrator.");
 
     const accessToken = signAccessToken({ userId: user._id });
-    const refreshToken = signRefreshToken({
-      userId: user._id,
-      ipAddress: ip,
-      userAgent: userAgent,
-    });
-    await refreshTokenModel.create({
-      user: user._id,
-      token: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      createdByIp: ip,
-    });
+    const refreshToken = signRefreshToken({ userId: user._id, ipAddress: ip, userAgent: userAgent, });
+    await refreshTokenModel.create({ user: user._id, token: refreshToken, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), createdByIp: ip, });
     return { user, accessToken, refreshToken };
   };
 
@@ -199,7 +179,7 @@ export class AuthService {
     await existingToken.save();
   };
 
-  completeRegistration = async (userId: string, registrationData: any) => {
+  completeRegistration = async (userId: string, registrationData: any, ip: string, userAgent: string) => {
     const user = await userModel.findById(userId);
     if (!user) throw new Error("User not found");
     if (!user.verificationStatus) throw new Error("User email not verified");
@@ -213,6 +193,7 @@ export class AuthService {
     user.universityId = universityId;
     user.roleId = roleId;
     user.courseIds = courseIds;
+    user.status = "ACTIVE";
     await user.save();
 
     if (role.name === "STUDENT") {
@@ -251,7 +232,20 @@ export class AuthService {
       );
     }
 
-    return user;
+    const accessToken = signAccessToken({ userId: user._id });
+    const refreshToken = signRefreshToken({
+      userId: user._id,
+      ipAddress: ip,
+      userAgent: userAgent,
+    });
+    await refreshTokenModel.create({
+      user: user._id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      createdByIp: ip,
+    });
+
+    return { user, accessToken, refreshToken };
   };
 
   deleteUser = async (userId: string) => {
