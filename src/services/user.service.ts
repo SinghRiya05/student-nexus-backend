@@ -127,7 +127,7 @@ export class AuthService {
   };
 
   // ------ LOGIN USER ------
-  loginUser = async ( email: string, password: string, ip: string, userAgent: string ) => {
+  loginUser = async (email: string, password: string, ip: string, userAgent: string) => {
     const user = await userModel.findOne({ email }).select("+password");
     if (!user) throw new Error("User not found");
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -264,7 +264,7 @@ export class AuthService {
     if (!user) throw new Error("User not found with this email");
 
     const otp = crypto.randomInt(100000, 999999).toString();
-    
+
     // Clear old reset codes
     await UserAuthCodeModel.deleteMany({
       userId: user._id,
