@@ -27,7 +27,6 @@ const userSchema = new Schema<IUser>(
     phone: {
       type: String,
       required: true,
-      unique: true
     },
 
     avatar: {
@@ -74,13 +73,13 @@ const userSchema = new Schema<IUser>(
     },
 
     followersCount: {
-        type: Number,
-        default: 0
+      type: Number,
+      default: 0
     },
 
     followingCount: {
-        type: Number,
-        default: 0
+      type: Number,
+      default: 0
     },
 
     status: {

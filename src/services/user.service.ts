@@ -255,7 +255,7 @@ export class AuthService {
   };
 
   getAllUsers = async () => {
-    return await userModel.find().select("-password");
+    return await userModel.find().select("-password").populate("universityId").populate("courseIds").populate("roleId");
   };
 
   // ------ FORGOT PASSWORD ------
