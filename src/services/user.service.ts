@@ -293,8 +293,8 @@ export class AuthService {
 
     return user;
   };
-  getAllUsers = async () => {
-    return await userModel.find().select("-password").populate("universityId").populate("courseIds").populate("roleId");
+  getAllUsers = async (authUserId: string) => {
+    return await userModel.find({ _id: { $ne: authUserId } }).select("-password").populate("universityId").populate("courseIds").populate("roleId");
   };
 
 

@@ -11,7 +11,8 @@ export class StudentController {
 
   // --- GET ALL STUDENTS ---
   getAllStudents = catchAsync(async (req: Request, res: Response) => {
-    const students = await studentService.getAllStudents();
+    const user = (req as any).user;
+    const students = await studentService.getAllStudents(user?._id?.toString());
     sendResponse(res, STATUS_CODES.SUCCESS, true, "Students fetched successfully.", students);
   });
 

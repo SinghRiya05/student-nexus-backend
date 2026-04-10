@@ -14,6 +14,7 @@ import followRouter from "../masterRoutes/follow.routes";
 import chatRouter from "../masterRoutes/chat.routes";
 import studentRouter from "../masterRoutes/students.routes";
 import alumniRouter from "../masterRoutes/alumni.routes";
+import teacherRouter from "../masterRoutes/teachers.routes";
 import { middleware as authMiddleware } from "../../middlewares/authMiddleware";
 
 const router = Router();
@@ -33,5 +34,6 @@ router.use("/follow", authMiddleware, followRouter);
 router.use("/chat", authMiddleware, chatRouter);
 router.use("/students", authMiddleware, studentRouter);
 router.use("/alumni", alumniRouter);
+router.use("/teachers", authMiddleware, teacherRouter);
 
 export default router;

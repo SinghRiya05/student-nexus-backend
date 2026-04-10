@@ -87,7 +87,8 @@ export class AuthController {
     });
 
     getAllUsers = catchAsync(async (req: Request, res: Response) => {
-        const users = await authService.getAllUsers();
+        const userId = (req as any).user?._id;
+        const users = await authService.getAllUsers(userId?.toString());
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Users fetched successfully.", users);
     });
 
