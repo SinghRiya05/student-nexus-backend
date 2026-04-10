@@ -254,6 +254,44 @@ export class AuthService {
     return await userModel.findByIdAndDelete(userId);
   };
 
+  getMe = async (userId: string) => {
+    const user = await userModel
+      .findById(userId)
+      .select("-password")
+      .populate([
+        {
+          path: "roleId",
+          select: "name",
+        },
+        {
+          path: "courseIds",
+          select: "courseName course_short_name",
+        },
+        {
+          path: "universityId",
+          select: "name short_name countryId cityId",
+          populate: [
+            {
+              path: "country",
+              select: "name",
+            },
+            {
+              path: "state",
+              select: "name",
+            },
+            {
+              path: "city",
+              select: "name",
+            },
+          ],
+        },
+      ])
+      .lean();
+
+    if (!user) throw new Error("User not found");
+
+    return user;
+  };
   getAllUsers = async () => {
     return await userModel.find().select("-password").populate("universityId").populate("courseIds").populate("roleId");
   };

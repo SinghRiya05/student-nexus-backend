@@ -24,9 +24,9 @@ export class AuthController {
         const { email, otp } = req.body;
         const ip = req.ip || "";
         const userAgent = req.headers["user-agent"] || "";
-        
+
         const user = await authService.verifyEmail(email, otp, ip, userAgent);
-        
+
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Email verified successfully.", user);
     });
 
@@ -34,12 +34,12 @@ export class AuthController {
         const { email, password } = req.body;
         const ip = req.ip || "";
         const userAgent = req.headers["user-agent"] || "";
-        
+
         const { user, accessToken, refreshToken } = await authService.loginUser(email, password, ip, userAgent);
-        
+
         sendAccessTokenCookie(res, accessToken);
         sendRefreshTokenCookie(res, refreshToken);
-        
+
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Login successful.", { user, accessToken, refreshToken });
     });
 
@@ -47,36 +47,36 @@ export class AuthController {
         const { userId, ...registrationData } = req.body;
         const ip = req.ip || "";
         const userAgent = req.headers["user-agent"] || "";
-        
+
         const { user, accessToken, refreshToken } = await authService.completeRegistration(userId, registrationData, ip, userAgent);
-        
+
         sendAccessTokenCookie(res, accessToken);
         sendRefreshTokenCookie(res, refreshToken);
-        
+
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Registration completed successfully.", { user, accessToken, refreshToken });
     });
 
     refreshToken = catchAsync(async (req: Request, res: Response) => {
         const token = req.cookies.refreshToken;
         const ip = req.ip || "";
-        
+
         const { accessToken, refreshToken: newRefreshToken } = await authService.refreshToken(token, ip);
-        
+
         sendAccessTokenCookie(res, accessToken);
         sendRefreshTokenCookie(res, newRefreshToken);
-        
+
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Token refreshed successfully.", { accessToken, refreshToken: newRefreshToken });
     });
 
     logout = catchAsync(async (req: Request, res: Response) => {
         const token = req.cookies.refreshToken;
         const ip = req.ip || "";
-        
+
         await authService.logout(token, ip);
-        
+
         clearAccessTokenCookie(res);
         clearRefreshTokenCookie(res);
-        
+
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Logout successful.");
     });
 
@@ -89,6 +89,12 @@ export class AuthController {
     getAllUsers = catchAsync(async (req: Request, res: Response) => {
         const users = await authService.getAllUsers();
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Users fetched successfully.", users);
+    });
+
+    getMe = catchAsync(async (req: Request, res: Response) => {
+        const userId = (req as any).user?._id;
+        const user = await authService.getMe(userId);
+        sendResponse(res, STATUS_CODES.SUCCESS, true, "User fetched successfully.", user);
     });
 
     togglePrivacy = catchAsync(async (req: Request, res: Response) => {
