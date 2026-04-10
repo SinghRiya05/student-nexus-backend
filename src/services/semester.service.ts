@@ -44,6 +44,12 @@ export class SemesterService {
         );
     }
 
+    getSemestersByCourseId = async (id: string) => {
+        const course = await CourseModel.findById(id);
+        if (!course) throw new NotFoundError("Course not found");
+        return await SemesterModel.find({ courseId: id })
+    }
+
     deleteSemester = async (id: string) => {
         const existingSemester = await SemesterModel.findById(id);
         if (!existingSemester) throw new NotFoundError("Semester not found");

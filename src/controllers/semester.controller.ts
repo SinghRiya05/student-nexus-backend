@@ -16,6 +16,12 @@ export class SemesterController {
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Semesters fetched successfully", result);
     }
 
+    getSemestersByCourseId = async (req: Request, res: Response) => {
+        const id = req.params.id as string;
+        const result = await semesterService.getSemestersByCourseId(id);
+        sendResponse(res, STATUS_CODES.SUCCESS, true, "Semesters fetched successfully", result);
+    }
+
     getSemesterById = async (req: Request, res: Response) => {
         const id = req.params.id as string;
         const result = await semesterService.getSemesterById(id);

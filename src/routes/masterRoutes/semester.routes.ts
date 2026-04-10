@@ -10,6 +10,7 @@ router.post("/", validateRequest(createSemesterSchema), semesterController.creat
 router.put("/:id", validateRequest(updateSemesterSchema), semesterController.updateSemester);
 router.delete("/:id", validateRequest(semesterIdParamsSchema), semesterController.deleteSemester);
 router.get("/:id", validateRequest(semesterIdParamsSchema), semesterController.getSemesterById);
+router.get("/course/:id", semesterController.getSemestersByCourseId);
 router.get("/", semesterController.getAllSemesters);
 
 export default router;
