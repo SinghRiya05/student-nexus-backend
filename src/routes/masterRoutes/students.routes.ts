@@ -9,5 +9,6 @@ studentRouter.get("/my-university", studentController.getStudentsByMyUniversity)
 studentRouter.get("/matched-hobby", studentController.getStudentsByMatchedHobbyBadge);
 studentRouter.get("/", studentController.getAllStudents);
 studentRouter.get("/matched-semester-with-course-and-same-university", studentController.getStudentsByMatchedSemesterWithCourseAndSameUniversity);
+studentRouter.get("/match-course-and-same-university", studentController.getStudentsByMatchCourseAndSameUniversity);
 
 export default studentRouter;

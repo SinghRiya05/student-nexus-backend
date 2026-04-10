@@ -112,4 +112,17 @@ export class FollowController {
       requests,
     );
   });
+
+  // ----- GET SENT REQUESTS -----
+  getSentRequests = catchAsync(async (req: Request, res: Response) => {
+    const userId = (req as any).user?._id;
+    const requests = await followService.getSentRequests(userId);
+    sendResponse(
+      res,
+      STATUS_CODES.SUCCESS,
+      true,
+      "Sent follow requests fetched successfully.",
+      requests,
+    );
+  });
 }

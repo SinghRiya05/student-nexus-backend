@@ -8,7 +8,7 @@ import StudentProfileModel from "../models/student.profile.model";
 const studentService = new StudentService();
 
 export class StudentController {
-  
+
   // --- GET ALL STUDENTS ---
   getAllStudents = catchAsync(async (req: Request, res: Response) => {
     const students = await studentService.getAllStudents();
@@ -18,7 +18,7 @@ export class StudentController {
   // --- GET STUDENTS FROM MY UNIVERSITY ---
   getStudentsByMyUniversity = catchAsync(async (req: Request, res: Response) => {
     const user = (req as any).user;
-    
+
     if (!user || !user.universityId) {
       throw new Error("User's university association not found.");
     }
@@ -30,20 +30,20 @@ export class StudentController {
   // --- GET STUDENTS BY MATCHED HOBBY BADGE ---
   getStudentsByMatchedHobbyBadge = catchAsync(async (req: Request, res: Response) => {
     const user = (req as any).user;
-    
+
     if (!user || !user.universityId) {
       throw new Error("User's university association not found.");
     }
 
     const userProfile = await StudentProfileModel.findOne({ userId: user._id });
-    
+
     if (!userProfile || !userProfile.hobby_badge) {
       return sendResponse(res, STATUS_CODES.SUCCESS, true, "Please set a hobby badge in your profile to find matches.", []);
     }
 
     const students = await studentService.getStudentsByMatchedHobbyBadge(
-      userProfile.hobby_badge, 
-      user.universityId.toString(), 
+      userProfile.hobby_badge,
+      user.universityId.toString(),
       user._id.toString()
     );
     sendResponse(res, STATUS_CODES.SUCCESS, true, "Students with matching hobby badge fetched successfully.", students);
@@ -54,7 +54,7 @@ export class StudentController {
   // --- GET STUDENTS BY MATCHED SEMESTER WITH COURSE AND SAME UNIVERSITY ---
   getStudentsByMatchedSemesterWithCourseAndSameUniversity = catchAsync(async (req: Request, res: Response) => {
     const user = (req as any).user;
-    
+
     if (!user || !user.universityId) {
       throw new Error("User's university association not found.");
     }
@@ -65,5 +65,17 @@ export class StudentController {
     sendResponse(res, STATUS_CODES.SUCCESS, true, "Students with matching semester, course, and same university fetched successfully.", students);
   });
 
+  getStudentsByMatchCourseAndSameUniversity = catchAsync(async (req: Request, res: Response) => {
+    const user = (req as any).user;
+
+    if (!user || !user.universityId) {
+      throw new Error("User's university association not found.");
+    }
+
+    const students = await studentService.getStudentsByMatchCourseAndSameUniversity(
+      user._id.toString()
+    );
+    sendResponse(res, STATUS_CODES.SUCCESS, true, "Students with matching course and same university fetched successfully.", students);
+  });
 
 }

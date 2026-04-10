@@ -16,11 +16,8 @@ authRouter.post("/refresh-token", authController.refreshToken);
 authRouter.post("/logout", authMiddleware, authController.logout);
 authRouter.delete("/delete-user/:id", authController.deleteUser);
 authRouter.get("/get-all-users", authMiddleware, authController.getAllUsers);
-<<<<<<< HEAD
 authRouter.get("/get-me", authMiddleware, authController.getMe);
-=======
 authRouter.get("/get-user-by-email/:email", authController.getUserByEmail);
->>>>>>> caf5b3da870d2105356382296746c9a23723117f
 authRouter.patch("/toggle-privacy", authMiddleware, authController.togglePrivacy);
 authRouter.post("/forgot-password", authController.forgotPassword);
 authRouter.post("/reset-password", authController.resetPassword);

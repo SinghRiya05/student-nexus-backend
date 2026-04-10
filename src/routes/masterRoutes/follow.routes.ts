@@ -12,5 +12,6 @@ followRouter.delete("/reject-request/:id", followController.rejectRequest);
 followRouter.get("/followers", followController.getFollowers);
 followRouter.get("/following", followController.getFollowing);
 followRouter.get("/pending-requests", followController.getPendingRequests);
+followRouter.get("/sent-requests", followController.getSentRequests);
 
 export default followRouter;

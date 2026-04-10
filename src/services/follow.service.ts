@@ -180,4 +180,11 @@ export class FollowService {
       .find({ following: new Types.ObjectId(userId), status: "PENDING" })
       .populate("follower", "firstName lastName avatar bio");
   };
+
+  // ----- GET SENT REQUESTS -----
+  getSentRequests = async (userId: string) => {
+    return await followModel
+      .find({ follower: new Types.ObjectId(userId), status: "PENDING" })
+      .populate("following", "firstName lastName avatar bio");
+  };
 }

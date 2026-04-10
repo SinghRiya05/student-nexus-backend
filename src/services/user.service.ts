@@ -194,14 +194,15 @@ export class AuthService {
     user.roleId = roleId;
     user.courseIds = courseIds;
     user.status = "ACTIVE";
+
     await user.save();
 
     if (role.name === "STUDENT") {
+      user.semesterId = profileData.semesterId;
       await StudentProfileModel.findOneAndUpdate(
         { userId: user._id },
         {
           userId: user._id,
-          semesterId: profileData.semesterId,
           hobby_badge: profileData.hobby_badge,
           skills: profileData.skills,
         },
