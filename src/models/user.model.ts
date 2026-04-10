@@ -112,9 +112,32 @@ const userSchema = new Schema<IUser>(
     },
   },
   {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
+
+userSchema.virtual("studentProfile", {
+  ref: "StudentProfile",
+  localField: "_id",
+  foreignField: "userId",
+  justOne: true,
+});
+
+userSchema.virtual("aluminiProfile", {
+  ref: "AluminiProfile",
+  localField: "_id",
+  foreignField: "userId",
+  justOne: true,
+});
+
+userSchema.virtual("teacherProfile", {
+  ref: "TeacherProfile",
+  localField: "_id",
+  foreignField: "userId",
+  justOne: true,
+});
 
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;

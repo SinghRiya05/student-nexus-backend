@@ -72,34 +72,69 @@ export class StudentService {
       },
       { $unwind: "$profile" },
       { $match: { "profile.hobby_badge": hobby_badge } },
-      {
-        $lookup: {
-          from: "universities",
-          localField: "universityId",
-          foreignField: "_id",
-          as: "universityId"
-        }
-      },
-      { $unwind: { path: "$universityId", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "semesters",
-          localField: "semesterId",
-          foreignField: "_id",
-          as: "semesterId"
-        }
-      },
-      { $unwind: { path: "$semesterId", preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          password: 0,
-          "profile.projects": 0,
-          "profile.skills": 0
-        }
-      }
     ]);
 
     return students;
   };
+
+
+  // ----- GET STUDENTS BY MATCHED SEMESTER WITH COURSE AND SAME UNIVERSITY
+  getStudentsByMatchedSemesterWithCourseAndSameUniversity = async (authUserId: string) => {
+    const studentRole = await RoleModel.findOne({ name: "STUDENT", isDeleted: false });
+    
+    if (!studentRole) {
+      throw new Error("Student role not found.");
+    }
+
+    // 1. Get user to get universityId and courseIds
+    const user = await userModel.findById(authUserId);
+    if (!user || !user.universityId || !user.courseIds || user.courseIds.length === 0) {
+      throw new Error("User data, university association, or courses not found.");
+    }
+
+    // 2. Get student profile to get the semesterId
+    const profile = await StudentProfileModel.findOne({ userId: authUserId });
+    if (!profile || !profile.semesterId) {
+      throw new Error("Student profile or semester association not found.");
+    }
+
+    const universityId = user.universityId;
+    const semesterId = profile.semesterId;
+    const courseIds = user.courseIds;
+
+    // 3. Find other students in same university, same semester, and shared courses
+    const students = await userModel.aggregate([
+      {
+        $match: {
+          roleId: studentRole._id,
+          universityId: new Types.ObjectId(universityId.toString()),
+          _id: { $ne: new Types.ObjectId(authUserId) },
+          courseIds: { $in: courseIds.map(id => new Types.ObjectId(id.toString())) },
+          isDeleted: false
+        }
+      },
+      {
+        $lookup: {
+          from: "studentprofiles",
+          localField: "_id",
+          foreignField: "userId",
+          as: "profile"
+        }
+      },
+      { $unwind: "$profile" },
+      {
+        $match: {
+          "profile.semesterId": new Types.ObjectId(semesterId.toString())
+        }
+      }
+    ]);
+
+    return await userModel.populate(students, [
+        { path: "universityId" },
+        { path: "courseIds" },
+        { path: "profile.semesterId" }
+    ]);
+  };
+
 
 }
