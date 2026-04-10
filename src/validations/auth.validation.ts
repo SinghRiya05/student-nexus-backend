@@ -50,7 +50,7 @@ export const completeRegistrationSchema = z.object({
     semesterId: z.string().refine(objectIdValidation, {
       message: "Invalid semester ID",
     }).optional(),
-    hobby_badge: z.array(z.string()).optional(),
+    hobby_badge: z.string().optional(),
     skills: z.array(z.string()).optional(),
     currentCompany: z.string().optional(),
     jobTitle: z.string().optional(),
