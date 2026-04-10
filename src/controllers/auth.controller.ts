@@ -97,6 +97,12 @@ export class AuthController {
         sendResponse(res, STATUS_CODES.SUCCESS, true, "User fetched successfully.", user);
     });
 
+    getUserByEmail = catchAsync(async (req: Request, res: Response) => {
+        const { email } = req.params;
+        const user = await authService.getUserByEmail(email as string);
+        sendResponse(res, STATUS_CODES.SUCCESS, true, "User fetched successfully.", user);
+    });
+
     togglePrivacy = catchAsync(async (req: Request, res: Response) => {
         const userId = (req as any).user?._id;
         const user = await userModel.findById(userId);

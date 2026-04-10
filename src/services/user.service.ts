@@ -296,6 +296,26 @@ export class AuthService {
     return await userModel.find().select("-password").populate("universityId").populate("courseIds").populate("roleId");
   };
 
+
+  getUserByEmail = async (email: string) => {
+    const user = await userModel.findOne({ email })
+      .select("-password")
+      .populate("universityId")
+      .populate("courseIds")
+      .populate("semesterId")
+      .populate("roleId")
+      .populate({
+        path: "studentProfile",
+        populate: {
+          path: "semesterId"
+        }
+      })
+      .populate("aluminiProfile")
+      .populate("teacherProfile");
+    if (!user) throw new Error("User not found");
+    return user;
+  };
+
   // ------ FORGOT PASSWORD ------
   forgotPassword = async (email: string) => {
     const user = await userModel.findOne({ email });

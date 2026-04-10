@@ -50,4 +50,20 @@ export class StudentController {
   });
 
 
+
+  // --- GET STUDENTS BY MATCHED SEMESTER WITH COURSE AND SAME UNIVERSITY ---
+  getStudentsByMatchedSemesterWithCourseAndSameUniversity = catchAsync(async (req: Request, res: Response) => {
+    const user = (req as any).user;
+    
+    if (!user || !user.universityId) {
+      throw new Error("User's university association not found.");
+    }
+
+    const students = await studentService.getStudentsByMatchedSemesterWithCourseAndSameUniversity(
+      user._id.toString()
+    );
+    sendResponse(res, STATUS_CODES.SUCCESS, true, "Students with matching semester, course, and same university fetched successfully.", students);
+  });
+
+
 }
