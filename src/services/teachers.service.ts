@@ -21,7 +21,9 @@ export class TeacherService {
         status: "ACTIVE",
       })
       .populate("teacherProfile")
-      .populate("universityId", "name short_name");
+      .populate("universityId", "name short_name")
+      .populate("courseIds", "courseName course_short_name")
+
   };
 
   // Get teachers from the same university who share any course or semester with the student
@@ -46,7 +48,9 @@ export class TeacherService {
         status: "ACTIVE",
       })
       .populate("teacherProfile")
-      .populate("universityId", "name short_name");
+      .populate("universityId", "name short_name")
+      .populate("courseIds", "courseName course_short_name")
+
   };
 
   // Get teachers from ALL universities except the student's own
@@ -67,7 +71,9 @@ export class TeacherService {
     return await userModel
       .find(query)
       .populate("teacherProfile")
-      .populate("universityId", "name short_name");
+      .populate("universityId", "name short_name")
+      .populate("courseIds", "courseName course_short_name")
+
   };
 
   // Get teachers who are associated with a specific course

@@ -86,7 +86,6 @@ export class StudentService {
     if (
       !user ||
       !user.universityId ||
-      !user.semesterId ||
       !user.courseIds ||
       user.courseIds.length === 0
     ) {
