@@ -20,21 +20,46 @@ const teacherResourceSchema: Schema<ITeacherResourceDocument> = new Schema(
     description: {
       type: String,
       trim: true,
+      required: true,
     },
     
     fileUrl: {
       type: String,
       trim: true,
+      required: true,
     },
     
     link: {
       type: String,
       trim: true,
     },
+
+    isPaid: {
+      type: Boolean,
+      default: false,
+    },
+
+    price: {
+      type: Number,
+      default: 0,
+    },
     
     courseId: {
       type: Schema.Types.ObjectId,
       ref: "Course",
+      required: true,
+    },
+
+    universityId: {
+      type: Schema.Types.ObjectId,
+      ref: "University",
+      required: true,
+    },
+
+    semesterId: {
+      type: Schema.Types.ObjectId,
+      ref: "Semester",
+      required: true,
     },
   },
   {

@@ -7,4 +7,8 @@ export interface ITeacherResource {
     fileUrl?: string;
     link?: string;
     courseId?: Types.ObjectId;
+    universityId?: Types.ObjectId;
+    semesterId?: Types.ObjectId;
+    isPaid?: boolean;
+    price?: number;
 }
