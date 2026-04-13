@@ -286,6 +286,10 @@ export class AuthService {
             },
           ],
         },
+        {
+          path: "semesterId",
+          select: "name",
+        }
       ])
       .lean();
 

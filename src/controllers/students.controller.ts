@@ -9,6 +9,13 @@ const studentService = new StudentService();
 
 export class StudentController {
 
+  // --- GET CURRENT STUDENT DATA (my own profile) ---
+  getCurrentStudentData = catchAsync(async (req: Request, res: Response) => {
+    const user = (req as any).user;
+    const data = await studentService.getCurrentStudentData(user._id.toString());
+    sendResponse(res, STATUS_CODES.SUCCESS, true, "Current student data fetched successfully.", data);
+  });
+
   // --- GET ALL STUDENTS ---
   getAllStudents = catchAsync(async (req: Request, res: Response) => {
     const user = (req as any).user;

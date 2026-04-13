@@ -5,7 +5,31 @@ import { Types } from "mongoose";
 
 export class StudentService {
 
-  // --- GET ALL STUDENTS ---
+  // --- GET CURRENT STUDENT FULL DATA ---
+  getCurrentStudentData = async (userId: string) => {
+    const student = await userModel
+      .findById(userId)
+      .select("-password")
+      .populate("roleId", "name")
+      .populate("universityId", "name short_name")
+      .populate("courseIds", "courseName course_short_name")
+      .populate("semesterId", "name")
+      .lean();
+
+    if (!student) throw new Error("Student not found.");
+
+    // StudentProfile (skills, hobby_badge, projects) ko bhi fetch karo
+    const profile = await StudentProfileModel.findOne({ userId })
+      .populate("semesterId", "name")
+      .lean();
+
+    return {
+      ...student,
+      studentProfile: profile || null,
+    };
+  };
+
+
   getAllStudents = async (authUserId: string) => {
     const studentRole = await RoleModel.findOne({ name: "STUDENT", isDeleted: false });
     if (!studentRole) {
