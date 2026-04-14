@@ -41,6 +41,7 @@ authRouter.delete("/delete-user/:id", authController.deleteUser);
 authRouter.get("/get-all-users", authMiddleware, authController.getAllUsers);
 authRouter.get("/get-me", authMiddleware, authController.getMe);
 authRouter.get("/get-user-by-email/:email", authController.getUserByEmail);
+authRouter.get("/get-by-id/:id", authMiddleware, authController.getById);
 authRouter.patch(
   "/toggle-privacy",
   authMiddleware,

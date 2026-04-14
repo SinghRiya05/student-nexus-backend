@@ -37,6 +37,7 @@ const studentProfileSchema: Schema<IStudentProfileDocument> = new Schema(
   }
 );
 
+
 const StudentProfileModel = mongoose.model<IStudentProfileDocument>("StudentProfile", studentProfileSchema);
 
 export default StudentProfileModel;

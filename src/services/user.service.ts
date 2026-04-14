@@ -199,12 +199,7 @@ export class AuthService {
     await existingToken.save();
   };
 
-  completeRegistration = async (
-    userId: string,
-    registrationData: any,
-    ip: string,
-    userAgent: string,
-  ) => {
+  completeRegistration = async (userId: string, registrationData: any, ip: string, userAgent: string,) => {
     const user = await userModel.findById(userId);
     if (!user) throw new Error("User not found");
     if (!user.verificationStatus) throw new Error("User email not verified");
@@ -220,14 +215,18 @@ export class AuthService {
     user.courseIds = courseIds;
     user.status = "ACTIVE";
 
+    if (role.name === "STUDENT") {
+      user.semesterId = profileData.semesterId;
+    }
+
     await user.save();
 
     if (role.name === "STUDENT") {
-      user.semesterId = profileData.semesterId;
       await StudentProfileModel.findOneAndUpdate(
         { userId: user._id },
         {
           userId: user._id,
+          semesterId: profileData.semesterId,
           hobby_badge: profileData.hobby_badge,
           skills: profileData.skills,
         },
@@ -324,7 +323,9 @@ export class AuthService {
     let profile = null;
 
     if (roleName === "STUDENT") {
-      profile = await StudentProfileModel.findOne({ userId: user._id }).lean();
+      profile = await StudentProfileModel.findOne({ userId: user._id })
+        .populate("semesterId")
+        .lean();
     } else if (roleName === "ALUMINI") {
       profile = await AluminiProfileModel.findOne({ userId: user._id }).lean();
     } else if (roleName === "TEACHER") {
@@ -345,43 +346,43 @@ export class AuthService {
   };
 
   getUserByEmail = async (email: string) => {
-    const user = await userModel
-      .findOne({ email })
-      .select("-password")
-      .populate("universityId")
-      .populate("courseIds")
-      .populate("semesterId")
-      .populate("roleId")
-      .populate({
-        path: "studentProfile",
-        populate: {
-          path: "semesterId",
-        },
-      })
-      .populate("aluminiProfile")
-      .populate("teacherProfile");
+    const user = await userModel.findOne({ email }).select("-password");
     if (!user) throw new Error("User not found");
+
+    await user.populate([
+      { path: "universityId" },
+      { path: "courseIds" },
+      { path: "semesterId" },
+      { path: "roleId" },
+      {
+        path: "studentProfile",
+        populate: { path: "semesterId" },
+      },
+      { path: "aluminiProfile" },
+      { path: "teacherProfile" },
+    ]);
+
     return user;
   };
 
 
   getById = async (id: string) => {
-    const user = await userModel
-      .findById(id)
-      .select("-password")
-      .populate("universityId")
-      .populate("courseIds")
-      .populate("semesterId")
-      .populate("roleId")
-      .populate({
-        path: "studentProfile",
-        populate: {
-          path: "semesterId",
-        },
-      })
-      .populate("aluminiProfile")
-      .populate("teacherProfile");
+    const user = await userModel.findById(id).select("-password");
     if (!user) throw new Error("User not found");
+
+    await user.populate([
+      { path: "universityId" },
+      { path: "courseIds" },
+      { path: "semesterId" },
+      { path: "roleId" },
+      {
+        path: "studentProfile",
+        populate: { path: "semesterId" },
+      },
+      { path: "aluminiProfile" },
+      { path: "teacherProfile" },
+    ]);
+
     return user;
   };
 
@@ -516,6 +517,8 @@ export class AuthService {
     if (courseIds !== undefined) {
       user.courseIds = Array.isArray(courseIds) ? courseIds : [];
     }
+
+    if (semesterId !== undefined) user.semesterId = semesterId;
 
     // ===== FILE HANDLING =====
     if (avatar !== undefined) {
