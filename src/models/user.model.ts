@@ -57,11 +57,6 @@ const userSchema = new Schema<IUser>(
       ref: "Course"
     }],
 
-    semesterId: {
-      type: Types.ObjectId,
-      ref: "Semester"
-    },
-
     roleId: {
       type: Types.ObjectId,
       ref: "Role"

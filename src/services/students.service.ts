@@ -13,16 +13,12 @@ export class StudentService {
       .populate("roleId", "name")
       .populate("universityId", "name short_name")
       .populate("courseIds", "courseName course_short_name")
-      .populate("semesterId", "name")
       .lean();
-
     if (!student) throw new Error("Student not found.");
-
     // StudentProfile (skills, hobby_badge, projects) ko bhi fetch karo
     const profile = await StudentProfileModel.findOne({ userId })
       .populate("semesterId", "name")
       .lean();
-
     return {
       ...student,
       studentProfile: profile || null,
@@ -38,7 +34,6 @@ export class StudentService {
     const students = await userModel.find({ roleId: studentRole._id, _id: { $ne: authUserId }, isDeleted: false })
       .populate("universityId")
       .populate("courseIds")
-      .populate("semesterId")
       .select("-password");
     return students;
   };
@@ -57,9 +52,7 @@ export class StudentService {
     })
       .populate("universityId")
       .populate("courseIds")
-      .populate("semesterId")
       .select("-password");
-
     return students;
   };
 
@@ -67,11 +60,9 @@ export class StudentService {
   // ---- GET STUDENTS BY MATCHED hobby_badge ----
   getStudentsByMatchedHobbyBadge = async (hobby_badge: string, universityId: string, authUserId: string) => {
     const studentRole = await RoleModel.findOne({ name: "STUDENT", isDeleted: false });
-
     if (!studentRole) {
       throw new Error("Student role not found. Please ensure the 'STUDENT' role exists in the database.");
     }
-
     const students = await userModel.aggregate([
       {
         $match: {
@@ -98,39 +89,50 @@ export class StudentService {
 
 
   getStudentsByMatchedSemesterWithCourseAndSameUniversity = async (authUserId: string) => {
-
     const studentRole = await RoleModel.findOne({ name: "STUDENT", isDeleted: false });
-    if (!studentRole) {
-      throw new Error("Student role not found.");
+    if (!studentRole) throw new Error("Student role not found.");
+
+    const user = await userModel.findById(authUserId);
+    if (!user || !user.universityId || !user.courseIds?.length) {
+      throw new Error("User data not complete.");
     }
 
-    // 1. Get logged-in user
-    const user = await userModel.findById(authUserId);
-
-    if (
-      !user ||
-      !user.universityId ||
-      !user.courseIds ||
-      user.courseIds.length === 0
-    ) {
-      throw new Error("User data not complete.");
+    // ✅ get logged-in user's semester
+    const authProfile = await StudentProfileModel.findOne({ userId: authUserId });
+    if (!authProfile?.semesterId) {
+      throw new Error("Semester not found for user");
     }
 
     const students = await userModel
       .find({
         roleId: studentRole._id,
         universityId: user.universityId,
-        semesterId: user.semesterId,
-        courseIds: { $in: user.courseIds }, // ✅ same course
-        _id: { $ne: user._id }, // ❌ exclude self
+        courseIds: { $in: user.courseIds },
+        _id: { $ne: user._id },
         isDeleted: false,
       })
       .select("-password")
       .populate("universityId", "name short_name")
-      .populate("courseIds", "courseName course_short_name")
-      .populate("semesterId", "name");
+      .populate("courseIds", "courseName course_short_name");
 
-    return students;
+    const profiles = await StudentProfileModel.find({
+      userId: { $in: students.map(s => s._id) },
+      semesterId: authProfile.semesterId // ✅ KEY FIX
+    }).populate("semesterId", "name");
+
+    const profileMap = new Map();
+    profiles.forEach(p => {
+      profileMap.set(p.userId.toString(), p);
+    });
+
+    const result = students
+      .filter(student => profileMap.has(student._id.toString()))
+      .map(student => ({
+        ...student.toObject(),
+        profile: profileMap.get(student._id.toString())
+      }));
+
+    return result;
   };
 
   getStudentsByMatchCourseAndSameUniversity = async (authUserId: string) => {
@@ -167,11 +169,9 @@ export class StudentService {
       }
 
     ]);
-
     return await userModel.populate(students, [
       { path: "universityId" },
-      { path: "courseIds" },
-      { path: "semesterId" },
+      { path: "courseIds" }
     ]);
   };
 }

@@ -223,10 +223,10 @@ export class AuthService {
     await user.save();
 
     if (role.name === "STUDENT") {
-      user.semesterId = profileData.semesterId;
       await StudentProfileModel.findOneAndUpdate(
         { userId: user._id },
         {
+          semesterId: profileData.semesterId,
           userId: user._id,
           hobby_badge: profileData.hobby_badge,
           skills: profileData.skills,
@@ -311,18 +311,12 @@ export class AuthService {
             },
           ],
         },
-        {
-          path: "semesterId",
-          select: "name",
-        },
       ])
       .lean();
 
     if (!user) throw new Error("User not found");
-
     const roleName = (user.roleId as any)?.name;
     let profile = null;
-
     if (roleName === "STUDENT") {
       profile = await StudentProfileModel.findOne({ userId: user._id }).lean();
     } else if (roleName === "ALUMINI") {
@@ -350,7 +344,6 @@ export class AuthService {
       .select("-password")
       .populate("universityId")
       .populate("courseIds")
-      .populate("semesterId")
       .populate("roleId")
       .populate({
         path: "studentProfile",
@@ -371,18 +364,24 @@ export class AuthService {
       .select("-password")
       .populate("universityId")
       .populate("courseIds")
-      .populate("semesterId")
-      .populate("roleId")
-      .populate({
-        path: "studentProfile",
-        populate: {
-          path: "semesterId",
-        },
-      })
-      .populate("aluminiProfile")
-      .populate("teacherProfile");
+      .populate("roleId");
+
     if (!user) throw new Error("User not found");
-    return user;
+
+    const studentProfile = await StudentProfileModel
+      .findOne({ userId: id })
+      .populate("semesterId", "name")
+      .lean();
+
+    const aluminiProfile = await AluminiProfileModel.findOne({ userId: id });
+    const teacherProfile = await TeacherProfileModel.findOne({ userId: id });
+
+    return {
+      ...user.toObject(),
+      studentProfile,
+      aluminiProfile,
+      teacherProfile
+    };
   };
 
 
@@ -472,7 +471,7 @@ export class AuthService {
     return true;
   };
 
-  
+
   // UPDATE PROFILE SERVICE
   updateProfile = async (userId: string, profileData: IUpdateProfile) => {
     const user = await userModel.findById(userId);
@@ -510,6 +509,7 @@ export class AuthService {
     if (startYear !== undefined) user.startYear = startYear;
     if (endYear !== undefined) user.endYear = endYear;
     if (isPrivate !== undefined) user.isPrivate = isPrivate;
+
 
     if (universityId !== undefined) user.universityId = universityId;
 
@@ -557,6 +557,8 @@ export class AuthService {
       );
     }
 
+
+
     else if (role.name === "ALUMINI") {
       if (skills !== undefined) profileUpdateData.skills = skills;
       if (projects !== undefined) profileUpdateData.projects = projects;
@@ -575,7 +577,6 @@ export class AuthService {
         { upsert: true, new: true }
       );
     }
-
     return await this.getById(userId);
   };
 

@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { IStudentProfile } from "./student.profile.interface";
 
 export type STATUS = "ACTIVE" | "INACTIVE";
 
@@ -33,5 +34,10 @@ export interface IUser {
   startYear?: number;
   endYear?: number;
 
+  studentProfile?: IStudentProfile | null;
+  aluminiProfile?: any;
+  teacherProfile?: any;
+
   comparePassword(password: string): Promise<boolean>;
+
 }
