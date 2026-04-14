@@ -104,6 +104,12 @@ export class AuthController {
         sendResponse(res, STATUS_CODES.SUCCESS, true, "User fetched successfully.", user);
     });
 
+    getById = catchAsync(async (req: Request, res: Response) => {
+        const { id } = req.params;
+        const user = await authService.getById(id as string);
+        sendResponse(res, STATUS_CODES.SUCCESS, true, "User fetched successfully.", user);
+    });
+
     togglePrivacy = catchAsync(async (req: Request, res: Response) => {
         const userId = (req as any).user?._id;
         const user = await userModel.findById(userId);
@@ -169,6 +175,13 @@ export class AuthController {
             else {
                 req.body[field] = [value];
             }
+            }
+        });
+
+        // ===== NORMALIZE ID FIELDS =====
+        ["universityId", "semesterId"].forEach((field) => {
+            if (req.body[field] === "" || req.body[field] === "null" || req.body[field] === "undefined") {
+            delete req.body[field];
             }
         });
 
