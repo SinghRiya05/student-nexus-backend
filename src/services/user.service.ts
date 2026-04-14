@@ -329,7 +329,7 @@ export class AuthService {
       .find({ _id: { $ne: authUserId } })
       .select("-password")
       .populate("universityId")
-      .populate("semesterId")
+      .populate('studentProfile')
       .populate("courseIds")
       .populate("roleId");
   };
