@@ -1,10 +1,12 @@
 import { userModel } from "../models/user.model";
 import UserAuthCodeModel from "../models/user.authcode.model";
 import { IUser } from "../interfaces/masterInterfaces/user.interface";
+import { IUpdateProfile } from "../interfaces/masterInterfaces/user-profile.interface";
 import RoleModel from "../models/role.model";
 import { sendEmail } from "../utils/sendEmail";
 import crypto from "crypto";
 import { renderTemplate } from "../utils/renderTemplate";
+import { deleteFileIfExists } from "../utils/file.utils";
 import {
   parseExpiryToMs,
   signAccessToken,
@@ -127,17 +129,35 @@ export class AuthService {
   };
 
   // ------ LOGIN USER ------
-  loginUser = async (email: string, password: string, ip: string, userAgent: string) => {
+  loginUser = async (
+    email: string,
+    password: string,
+    ip: string,
+    userAgent: string,
+  ) => {
     const user = await userModel.findOne({ email }).select("+password");
     if (!user) throw new Error("User not found");
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) throw new Error("Invalid password");
-    if (!user.verificationStatus) throw new Error("User not verified. Please verify your email.");
-    if (user.status !== "ACTIVE") throw new Error("User account is not active. Please complete registration or contact administrator.");
+    if (!user.verificationStatus)
+      throw new Error("User not verified. Please verify your email.");
+    if (user.status !== "ACTIVE")
+      throw new Error(
+        "User account is not active. Please complete registration or contact administrator.",
+      );
 
     const accessToken = signAccessToken({ userId: user._id });
-    const refreshToken = signRefreshToken({ userId: user._id, ipAddress: ip, userAgent: userAgent, });
-    await refreshTokenModel.create({ user: user._id, token: refreshToken, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), createdByIp: ip, });
+    const refreshToken = signRefreshToken({
+      userId: user._id,
+      ipAddress: ip,
+      userAgent: userAgent,
+    });
+    await refreshTokenModel.create({
+      user: user._id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      createdByIp: ip,
+    });
     return { user, accessToken, refreshToken };
   };
 
@@ -179,7 +199,12 @@ export class AuthService {
     await existingToken.save();
   };
 
-  completeRegistration = async (userId: string, registrationData: any, ip: string, userAgent: string) => {
+  completeRegistration = async (
+    userId: string,
+    registrationData: any,
+    ip: string,
+    userAgent: string,
+  ) => {
     const user = await userModel.findById(userId);
     if (!user) throw new Error("User not found");
     if (!user.verificationStatus) throw new Error("User email not verified");
@@ -289,21 +314,39 @@ export class AuthService {
         {
           path: "semesterId",
           select: "name",
-        }
+        },
       ])
       .lean();
 
     if (!user) throw new Error("User not found");
 
-    return user;
-  };
-  getAllUsers = async (authUserId: string) => {
-    return await userModel.find({ _id: { $ne: authUserId } }).select("-password").populate("universityId").populate("courseIds").populate("roleId");
+    const roleName = (user.roleId as any)?.name;
+    let profile = null;
+
+    if (roleName === "STUDENT") {
+      profile = await StudentProfileModel.findOne({ userId: user._id }).lean();
+    } else if (roleName === "ALUMINI") {
+      profile = await AluminiProfileModel.findOne({ userId: user._id }).lean();
+    } else if (roleName === "TEACHER") {
+      profile = await TeacherProfileModel.findOne({ userId: user._id }).lean();
+    }
+
+    return { ...user, profile };
   };
 
+
+  getAllUsers = async (authUserId: string) => {
+    return await userModel
+      .find({ _id: { $ne: authUserId } })
+      .select("-password")
+      .populate("universityId")
+      .populate("courseIds")
+      .populate("roleId");
+  };
 
   getUserByEmail = async (email: string) => {
-    const user = await userModel.findOne({ email })
+    const user = await userModel
+      .findOne({ email })
       .select("-password")
       .populate("universityId")
       .populate("courseIds")
@@ -312,14 +355,36 @@ export class AuthService {
       .populate({
         path: "studentProfile",
         populate: {
-          path: "semesterId"
-        }
+          path: "semesterId",
+        },
       })
       .populate("aluminiProfile")
       .populate("teacherProfile");
     if (!user) throw new Error("User not found");
     return user;
   };
+
+
+  getById = async (id: string) => {
+    const user = await userModel
+      .findById(id)
+      .select("-password")
+      .populate("universityId")
+      .populate("courseIds")
+      .populate("semesterId")
+      .populate("roleId")
+      .populate({
+        path: "studentProfile",
+        populate: {
+          path: "semesterId",
+        },
+      })
+      .populate("aluminiProfile")
+      .populate("teacherProfile");
+    if (!user) throw new Error("User not found");
+    return user;
+  };
+
 
   // ------ FORGOT PASSWORD ------
   forgotPassword = async (email: string) => {
@@ -376,7 +441,8 @@ export class AuthService {
     if (!authCode) throw new Error("Invalid or expired reset code");
 
     // Check expiry manually just in case even though TTL index exists
-    if (new Date() > authCode.expiresAt) throw new Error("Reset code has expired");
+    if (new Date() > authCode.expiresAt)
+      throw new Error("Reset code has expired");
 
     // Mark code as used
     authCode.isUsed = true;
@@ -405,4 +471,112 @@ export class AuthService {
     if (!authCode) throw new Error("Invalid or expired reset code");
     return true;
   };
+
+  
+  // UPDATE PROFILE SERVICE
+  updateProfile = async (userId: string, profileData: IUpdateProfile) => {
+    const user = await userModel.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    // ❌ Prevent restricted updates
+    if ("email" in profileData || "roleId" in profileData) {
+      throw new Error("Email and Role cannot be updated");
+    }
+
+    const {
+      firstName,
+      lastName,
+      avatar,
+      coverImage,
+      phone,
+      bio,
+      startYear,
+      endYear,
+      isPrivate,
+      universityId,
+      courseIds,
+      skills,
+      projects,
+      semesterId,
+      hobby_badge,
+      ...otherProfileData
+    } = profileData as any;
+
+    // ===== USER UPDATE =====
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
+    if (phone !== undefined) user.phone = phone;
+    if (bio !== undefined) user.bio = bio;
+    if (startYear !== undefined) user.startYear = startYear;
+    if (endYear !== undefined) user.endYear = endYear;
+    if (isPrivate !== undefined) user.isPrivate = isPrivate;
+
+    if (universityId !== undefined) user.universityId = universityId;
+
+    if (courseIds !== undefined) {
+      user.courseIds = Array.isArray(courseIds) ? courseIds : [];
+    }
+
+    // ===== FILE HANDLING =====
+    if (avatar !== undefined) {
+      if (user.avatar && user.avatar !== avatar) {
+        deleteFileIfExists(user.avatar);
+      }
+      user.avatar = avatar;
+    }
+
+    if (coverImage !== undefined) {
+      if (user.coverImage && user.coverImage !== coverImage) {
+        deleteFileIfExists(user.coverImage);
+      }
+      user.coverImage = coverImage;
+    }
+
+    await user.save();
+
+    // ===== ROLE CHECK =====
+    const role = await RoleModel.findById(user.roleId);
+    if (!role) throw new Error("Role not found");
+
+    let profileUpdateData: any = {
+      userId: user._id,
+      ...otherProfileData,
+    };
+
+    // ===== ROLE BASED PROFILE UPDATE =====
+    if (role.name === "STUDENT") {
+      if (skills !== undefined) profileUpdateData.skills = skills;
+      if (projects !== undefined) profileUpdateData.projects = projects;
+      if (semesterId !== undefined) profileUpdateData.semesterId = semesterId;
+      if (hobby_badge !== undefined) profileUpdateData.hobby_badge = hobby_badge;
+
+      await StudentProfileModel.findOneAndUpdate(
+        { userId: user._id },
+        profileUpdateData,
+        { upsert: true, new: true }
+      );
+    }
+
+    else if (role.name === "ALUMINI") {
+      if (skills !== undefined) profileUpdateData.skills = skills;
+      if (projects !== undefined) profileUpdateData.projects = projects;
+
+      await AluminiProfileModel.findOneAndUpdate(
+        { userId: user._id },
+        profileUpdateData,
+        { upsert: true, new: true }
+      );
+    }
+
+    else if (role.name === "TEACHER") {
+      await TeacherProfileModel.findOneAndUpdate(
+        { userId: user._id },
+        profileUpdateData,
+        { upsert: true, new: true }
+      );
+    }
+
+    return await this.getById(userId);
+  };
+
 }
