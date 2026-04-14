@@ -340,7 +340,6 @@ export class AuthService {
     await user.populate([
       { path: "universityId" },
       { path: "courseIds" },
-      { path: "semesterId" },
       { path: "roleId" },
       {
         path: "studentProfile",
@@ -361,7 +360,6 @@ export class AuthService {
     await user.populate([
       { path: "universityId" },
       { path: "courseIds" },
-      { path: "semesterId" },
       { path: "roleId" },
       {
         path: "studentProfile",
