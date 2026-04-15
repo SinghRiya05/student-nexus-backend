@@ -158,7 +158,8 @@ export class AuthService {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       createdByIp: ip,
     });
-    return { user, accessToken, refreshToken };
+    const populatedUser = await this.getById(user._id.toString());
+    return { user: populatedUser, accessToken, refreshToken };
   };
 
   refreshToken = async (token: string, ip: string) => {
@@ -264,7 +265,8 @@ export class AuthService {
       createdByIp: ip,
     });
 
-    return { user, accessToken, refreshToken };
+    const populatedUser = await this.getById(user._id.toString());
+    return { user: populatedUser, accessToken, refreshToken };
   };
 
   deleteUser = async (userId: string) => {
@@ -276,7 +278,6 @@ export class AuthService {
   getMe = async (userId: string) => {
     const user = await userModel
       .findById(userId)
-      .select("-password")
       .populate([
         {
           path: "roleId",
@@ -355,7 +356,7 @@ export class AuthService {
 
 
   getById = async (id: string) => {
-    const user = await userModel.findById(id).select("-password");
+    const user = await userModel.findById(id);
     if (!user) throw new Error("User not found");
 
     await user.populate([
