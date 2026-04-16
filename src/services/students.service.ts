@@ -25,6 +25,16 @@ export class StudentService {
     };
   };
 
+  getStudentById = async (userId: string) => {
+    const student = await userModel.findById(userId).select("-password").populate("roleId", "name").populate("universityId", "name short_name").populate("courseIds", "courseName course_short_name").lean();
+    if (!student) throw new Error("Student not found.");
+    const profile = await StudentProfileModel.findOne({ userId }).populate("semesterId", "name").lean();
+    return {
+      ...student,
+      studentProfile: profile || null,
+    };
+  }
+
 
   getAllStudents = async (authUserId: string) => {
     const studentRole = await RoleModel.findOne({ name: "STUDENT", isDeleted: false });
@@ -90,17 +100,16 @@ export class StudentService {
 
   getStudentsByMatchedSemesterWithCourseAndSameUniversity = async (authUserId: string) => {
     const studentRole = await RoleModel.findOne({ name: "STUDENT", isDeleted: false });
-    if (!studentRole) throw new Error("Student role not found.");
-
+    if (!studentRole) return [];
     const user = await userModel.findById(authUserId);
     if (!user || !user.universityId || !user.courseIds?.length) {
-      throw new Error("User data not complete.");
+      return [];
     }
 
     // ✅ get logged-in user's semester
     const authProfile = await StudentProfileModel.findOne({ userId: authUserId });
     if (!authProfile?.semesterId) {
-      throw new Error("Semester not found for user");
+      return [];
     }
 
     const students = await userModel
@@ -139,13 +148,13 @@ export class StudentService {
     const studentRole = await RoleModel.findOne({ name: "STUDENT", isDeleted: false });
 
     if (!studentRole) {
-      throw new Error("Student role not found.");
+      return [];
     }
 
     // 1. Get user to get universityId and courseIds
     const user = await userModel.findById(authUserId);
     if (!user || !user.universityId || !user.courseIds || user.courseIds.length === 0) {
-      throw new Error("User data, university association, or courses not found.");
+      return [];
     }
 
     const universityId = user.universityId;

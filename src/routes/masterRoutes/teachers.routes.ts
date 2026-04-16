@@ -17,6 +17,9 @@ teacherRouter.get("/class-teachers", authMiddleware, teacherController.getClassT
 // GET /teachers/other-universities
 teacherRouter.get("/other-universities", authMiddleware, teacherController.getOtherUniversityTeachers);
 
+// GET /teachers/:id
+teacherRouter.get("/:id", authMiddleware, teacherController.getTeacherById);
+
 // GET /teachers/by-course/:courseId
 teacherRouter.get("/by-course/:courseId", authMiddleware, teacherController.getTeachersByCourse);
 

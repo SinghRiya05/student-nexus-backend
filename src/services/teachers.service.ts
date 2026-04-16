@@ -95,6 +95,17 @@ export class TeacherService {
       .populate("courseIds", "courseName course_short_name");
   };
 
+
+  //-----Get Teacher by ID
+
+  static getTeacherById = async (teacherId: string) => {
+    return await userModel
+      .findById(teacherId)
+      .populate("teacherProfile")
+      .populate("universityId", "name short_name")
+      .populate("courseIds", "courseName course_short_name");
+  };
+
   // --- TEACHER RESOURCE CRUD ---
 
   static createResource = async (data: any) => {
@@ -107,7 +118,7 @@ export class TeacherService {
     if (!resource) {
       throw new Error("Resource not found or unauthorized.");
     }
-    
+
     // If updating the file, delete the old one
     if (data.fileUrl && resource.fileUrl && data.fileUrl !== resource.fileUrl) {
       deleteFileIfExists(resource.fileUrl);
@@ -122,18 +133,18 @@ export class TeacherService {
     if (!resource) {
       throw new Error("Resource not found or unauthorized.");
     }
-    
+
     if (resource.fileUrl) {
       deleteFileIfExists(resource.fileUrl);
     }
-    
+
     return resource;
   };
 
   static getTeacherResources = async (teacherId: string) => {
     return await TeacherResourceModel.find({ teacherId })
+      .populate("teacherId", "firstName lastName avatar")
       .populate("courseId", "courseName course_short_name")
-      .populate("semesterId", "semesterNumber")
       .populate("universityId", "name short_name");
   };
 
@@ -141,13 +152,12 @@ export class TeacherService {
     const resource = await TeacherResourceModel.findById(resourceId)
       .populate("teacherId", "firstName lastName avatar")
       .populate("courseId", "courseName course_short_name")
-      .populate("semesterId", "semesterNumber")
       .populate("universityId", "name short_name");
-      
+
     if (!resource) {
       throw new Error("Resource not found");
     }
-    
+
     return resource;
   };
 
