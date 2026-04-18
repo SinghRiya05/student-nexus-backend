@@ -22,6 +22,13 @@ export class FeedController {
   });
 
 
+  // ---- GET TRENDING HASHTAGS ----
+  getTrendingHashtags = catchAsync(async (req: Request, res: Response) => {
+    const result = await feedService.getTrendingHashtags();
+    sendResponse(res, STATUS_CODES.SUCCESS, true, "Trending hashtags retrieved successfully", result);
+  });
+
+
   // ---- GET FEED POST BY AUTHOR ID ----
   getByAuthorId = catchAsync(async (req: Request, res: Response) => {
     const authorId = req.params.authorId as string;

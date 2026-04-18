@@ -10,6 +10,7 @@ const feedController = new FeedController();
 
 // Public routes
 feedRouter.get("/", feedController.getAll);
+feedRouter.get("/trending-hashtags", feedController.getTrendingHashtags);
 feedRouter.get("/author/:authorId", feedController.getByAuthorId);
 feedRouter.get("/:id", validateRequest(feedIdSchema), feedController.getById);
 feedRouter.get("/:id/comments", validateRequest(feedIdSchema), feedController.getComments);

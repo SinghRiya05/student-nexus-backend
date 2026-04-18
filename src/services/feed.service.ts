@@ -13,7 +13,6 @@ export class FeedService {
       return hashtags || [];
     }
 
-    // Check if the array contains a single stringified JSON array
     if (
       hashtags.length === 1 &&
       typeof hashtags[0] === "string" &&
@@ -46,7 +45,7 @@ export class FeedService {
 
   // ---- GET ALL FEED POSTS ----
   getAll = async (query: any) => {
-    const { page = 1, limit = 10, search } = query;
+    const { page = 1, limit = 10, search, sortBy } = query;
     const skip = (Number(page) - 1) * Number(limit);
 
     const filter: any = { isDeleted: false };
@@ -57,6 +56,12 @@ export class FeedService {
       ];
     }
 
+    // Determine sort order
+    let sort: any = { createdAt: -1 };
+    if (sortBy === "likes") sort = { likesCount: -1 };
+    else if (sortBy === "views") sort = { viewsCount: -1 };
+    else if (sortBy === "comments") sort = { commentsCount: -1 };
+
     const feeds = await FeedModel.find(filter)
       .populate({
         path: "authorId",
@@ -66,11 +71,10 @@ export class FeedService {
           { path: "universityId", select: "name" },
         ],
       })
-      .sort({ createdAt: -1 })
+      .sort(sort)
       .skip(skip)
       .limit(Number(limit));
 
-    // Sanitize hashtags for existing records
     const sanitizedFeeds = feeds.map((feed) => {
       feed.hashtags = this.sanitizeHashtags(feed.hashtags);
       return feed;
@@ -126,6 +130,35 @@ export class FeedService {
         totalPages: Math.ceil(total / Number(limit)),
       },
     };
+  };
+
+
+  // ---- GET TRENDING HASHTAGS ----
+  getTrendingHashtags = async () => {
+    // Get top 50 posts by engagement
+    const topPosts = await FeedModel.find({ isDeleted: false })
+      .sort({ viewsCount: -1, likesCount: -1 })
+      .limit(50)
+      .select("hashtags");
+
+    const hashtagCounts: Record<string, number> = {};
+
+    topPosts.forEach((post) => {
+      const tags = this.sanitizeHashtags(post.hashtags);
+      tags.forEach((tag) => {
+        if (tag) {
+          hashtagCounts[tag] = (hashtagCounts[tag] || 0) + 1;
+        }
+      });
+    });
+
+    // Sort by frequency and take top 10
+    const trendingTags = Object.entries(hashtagCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([tag]) => tag);
+
+    return trendingTags;
   };
 
 
