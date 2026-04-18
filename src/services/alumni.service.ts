@@ -175,4 +175,15 @@ export class AlumniService {
     return groupedAlumni;
   };
 
+  getAlumnibyId = async (id: string) => {
+    const alumni = await userModel.findById(id)
+      .populate("universityId")
+      .populate("courseIds")
+      .populate("aluminiProfile")
+      .select("-password");
+    return alumni;
+  };
+
+
 }
+

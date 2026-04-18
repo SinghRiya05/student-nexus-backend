@@ -11,7 +11,7 @@ const ALLOWED_MIME_TYPES = [
   "image/webp",
 ];
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024 * 1024 * 1024; // 2MB
 
 const createStorage = (folder: string) =>
   multer.diskStorage({

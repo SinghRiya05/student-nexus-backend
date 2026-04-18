@@ -11,5 +11,6 @@ alumniRouter.get("/my-course", authMiddleware, alumniController.getAlumniByMyCou
 alumniRouter.get("/university/:universityId", authMiddleware, alumniController.getAlumniByUniversity);
 alumniRouter.get("/job-titles", authMiddleware, alumniController.getAluminiByJobTitles);
 alumniRouter.get("/company", authMiddleware, alumniController.getAluminiByCompany);
+alumniRouter.get("/:id", authMiddleware, alumniController.getAlumniById);
 
 export default alumniRouter;

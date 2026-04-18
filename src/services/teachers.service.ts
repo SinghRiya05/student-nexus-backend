@@ -95,11 +95,27 @@ export class TeacherService {
       .populate("courseIds", "courseName course_short_name");
   };
 
+
+  //-----Get Teacher by ID
+
+  static getTeacherById = async (teacherId: string) => {
+    return await userModel
+      .findById(teacherId)
+      .populate("teacherProfile")
+      .populate("universityId", "name short_name")
+      .populate("courseIds", "courseName course_short_name");
+  };
+
   // --- TEACHER RESOURCE CRUD ---
 
   static createResource = async (data: any) => {
     const newResource = new TeacherResourceModel(data);
-    return await newResource.save();
+    const savedResource = await newResource.save();
+    return await savedResource.populate([
+      { path: "teacherId", select: "firstName lastName avatar" },
+      { path: "courseId", select: "courseName course_short_name" },
+      { path: "universityId", select: "name short_name" }
+    ]);
   };
 
   static updateResource = async (resourceId: string, teacherId: string, data: any) => {
@@ -107,14 +123,19 @@ export class TeacherService {
     if (!resource) {
       throw new Error("Resource not found or unauthorized.");
     }
-    
+
     // If updating the file, delete the old one
     if (data.fileUrl && resource.fileUrl && data.fileUrl !== resource.fileUrl) {
       deleteFileIfExists(resource.fileUrl);
     }
 
     Object.assign(resource, data);
-    return await resource.save();
+    const updatedResource = await resource.save();
+    return await updatedResource.populate([
+      { path: "teacherId", select: "firstName lastName avatar" },
+      { path: "courseId", select: "courseName course_short_name" },
+      { path: "universityId", select: "name short_name" }
+    ]);
   };
 
   static deleteResource = async (resourceId: string, teacherId: string) => {
@@ -122,32 +143,33 @@ export class TeacherService {
     if (!resource) {
       throw new Error("Resource not found or unauthorized.");
     }
-    
+
     if (resource.fileUrl) {
       deleteFileIfExists(resource.fileUrl);
     }
-    
+
     return resource;
   };
 
   static getTeacherResources = async (teacherId: string) => {
     return await TeacherResourceModel.find({ teacherId })
+      .populate("teacherId", "firstName lastName avatar")
       .populate("courseId", "courseName course_short_name")
-      .populate("semesterId", "semesterNumber")
-      .populate("universityId", "name short_name");
+      .populate("universityId", "name short_name")
+      .populate("semesterId", "name");
   };
 
   static getResourceById = async (resourceId: string) => {
     const resource = await TeacherResourceModel.findById(resourceId)
       .populate("teacherId", "firstName lastName avatar")
       .populate("courseId", "courseName course_short_name")
-      .populate("semesterId", "semesterNumber")
-      .populate("universityId", "name short_name");
-      
+      .populate("universityId", "name short_name")
+      .populate("semesterId", "name");
+
     if (!resource) {
       throw new Error("Resource not found");
     }
-    
+
     return resource;
   };
 

@@ -1,12 +1,10 @@
 import { COMMON_ERROR_MESSAGE, STATUS_CODES } from "../config";
+import { ApiError } from "./ApiError";
 
 
-export class AppError extends Error {
-  statusCode: number;
-
+export class AppError extends ApiError {
   constructor(message: string, statusCode: number) {
-    super(message);
-    this.statusCode = statusCode;
+    super(message, statusCode);
   }
 }
 

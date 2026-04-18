@@ -9,8 +9,8 @@ const semesterController = new SemesterController();
 router.post("/", validateRequest(createSemesterSchema), semesterController.createSemester);
 router.put("/:id", validateRequest(updateSemesterSchema), semesterController.updateSemester);
 router.delete("/:id", validateRequest(semesterIdParamsSchema), semesterController.deleteSemester);
-router.get("/:id", validateRequest(semesterIdParamsSchema), semesterController.getSemesterById);
 router.get("/course/:id", semesterController.getSemestersByCourseId);
+router.get("/:id", validateRequest(semesterIdParamsSchema), semesterController.getSemesterById);
 router.get("/", semesterController.getAllSemesters);
 
 export default router;

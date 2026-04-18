@@ -63,6 +63,18 @@ export class TeacherController {
     sendResponse(res, STATUS_CODES.SUCCESS, true, "Teachers for the specified course fetched successfully.", teachers);
   });
 
+  // GET /teachers/:id
+  getTeacherById = catchAsync(async (req: Request, res: Response) => {
+    const teacherId = req.params.id as string;
+
+    if (!teacherId) {
+      throw new Error("teacherId parameter is required.");
+    }
+
+    const teacher = await TeacherService.getTeacherById(teacherId);
+    sendResponse(res, STATUS_CODES.SUCCESS, true, "Teacher fetched successfully.", teacher);
+  });
+
 
   // --- TEACHER RESOURCE CRUD ---
   createResource = catchAsync(async (req: Request, res: Response) => {
@@ -74,7 +86,7 @@ export class TeacherController {
     }
 
     data.teacherId = user._id;
-    
+
     if (user.universityId) {
       data.universityId = user.universityId;
     }
@@ -106,7 +118,7 @@ export class TeacherController {
 
   getResourceById = catchAsync(async (req: Request, res: Response) => {
     const resourceId = req.params.resourceId as string;
-    
+
     if (!resourceId) {
       throw new Error("resourceId parameter is required.");
     }
