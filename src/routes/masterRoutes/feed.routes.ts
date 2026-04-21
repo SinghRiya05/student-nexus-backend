@@ -17,7 +17,6 @@ feedRouter.get("/:id/comments", validateRequest(feedIdSchema), feedController.ge
 
 // Authenticated routes
 feedRouter.use(authMiddleware);
-
 feedRouter.post("/", uploadTo("media").single("media"), validateRequest(createFeedSchema), feedController.create);
 feedRouter.put("/:id", uploadTo("media").single("media"), validateRequest(updateFeedSchema), feedController.update);
 feedRouter.delete("/:id", validateRequest(feedIdSchema), feedController.delete);
@@ -25,5 +24,6 @@ feedRouter.delete("/:id", validateRequest(feedIdSchema), feedController.delete);
 // Interaction routes
 feedRouter.post("/:id/like", validateRequest(feedIdSchema), feedController.toggleLike);
 feedRouter.post("/:id/comment", validateRequest(commentSchema), feedController.addComment);
+feedRouter.delete("/comment/:commentId", validateRequest(feedIdSchema), feedController.deleteComment);
 
 export default feedRouter;

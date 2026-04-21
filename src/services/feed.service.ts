@@ -38,7 +38,7 @@ export class FeedService {
 
     data.hashtags = this.sanitizeHashtags(data.hashtags);
 
-    const feed = await FeedModel.create({...data, authorId: userId});
+    const feed = await FeedModel.create({ ...data, authorId: userId });
     return feed;
   };
 
@@ -207,7 +207,7 @@ export class FeedService {
     }
 
     Object.assign(feed, data);
-    
+
     feed.hashtags = this.sanitizeHashtags(feed.hashtags);
 
     await feed.save();
@@ -280,4 +280,30 @@ export class FeedService {
       .sort({ createdAt: -1 });
     return comments;
   };
+
+  deleteComment = async (userId: string, commentId: string) => {
+    const comment = await CommentModel.findOne({
+      _id: commentId,
+      isDeleted: false
+    });
+    if (!comment) {
+      throw new NotFoundError("Comment not found");
+    }
+    // Fetch post
+    const feed = await FeedModel.findById(comment.feedId);
+    if (!feed) {
+      throw new NotFoundError("Feed post not found");
+    }
+    // Check authorization
+    const isCommentAuthor = comment.authorId.toString() === userId;
+    const isPostOwner = feed.authorId.toString() === userId;
+    if (!isCommentAuthor && !isPostOwner) {
+      throw new UnauthorizedError(
+        "You are not authorized to delete this comment"
+      );
+    }
+    comment.isDeleted = true;
+    await comment.save();
+    return comment;
+  }
 }

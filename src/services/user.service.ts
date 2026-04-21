@@ -327,7 +327,7 @@ export class AuthService {
 
   getAllUsers = async (authUserId: string) => {
     return await userModel
-      .find({ _id: { $ne: authUserId } })
+      .find()
       .select("-password")
       .populate("universityId")
       .populate('studentProfile')

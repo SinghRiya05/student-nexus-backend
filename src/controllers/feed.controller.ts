@@ -87,4 +87,12 @@ export class FeedController {
     const result = await feedService.getComments(id);
     sendResponse(res, STATUS_CODES.SUCCESS, true, "Comments retrieved successfully", result);
   });
+
+  // ---- DELETE COMMENT ----
+  deleteComment = catchAsync(async (req: Request, res: Response) => {
+    const userId = (req as any).user._id.toString();
+    const commentId = req.params.commentId as string;
+    const result = await feedService.deleteComment(userId, commentId);
+    sendResponse(res, STATUS_CODES.SUCCESS, true, "Comment deleted successfully", result);
+  });
 }
