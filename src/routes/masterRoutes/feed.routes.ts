@@ -5,14 +5,16 @@ import { middleware as authMiddleware } from "../../middlewares/authMiddleware";
 import { uploadTo } from "../../middlewares/imageUpload.middleware";
 import { createFeedSchema, updateFeedSchema, commentSchema, feedIdSchema } from "../../validations/feed.validation";
 
+import { optionalAuthMiddleware } from "../../middlewares/optionalAuthMiddleware";
+
 const feedRouter = Router();
 const feedController = new FeedController();
 
-// Public routes
-feedRouter.get("/", feedController.getAll);
+// Public routes (with optional auth for personalized data)
+feedRouter.get("/", optionalAuthMiddleware, feedController.getAll);
 feedRouter.get("/trending-hashtags", feedController.getTrendingHashtags);
-feedRouter.get("/author/:authorId", feedController.getByAuthorId);
-feedRouter.get("/:id", validateRequest(feedIdSchema), feedController.getById);
+feedRouter.get("/author/:authorId", optionalAuthMiddleware, feedController.getByAuthorId);
+feedRouter.get("/:id", validateRequest(feedIdSchema), optionalAuthMiddleware, feedController.getById);
 feedRouter.get("/:id/comments", validateRequest(feedIdSchema), feedController.getComments);
 
 // Authenticated routes

@@ -17,7 +17,8 @@ export class FeedController {
 
   // ---- GET ALL FEED POSTS ----
   getAll = catchAsync(async (req: Request, res: Response) => {
-    const result = await feedService.getAll(req.query);
+    const userId = (req as any).user?._id?.toString();
+    const result = await feedService.getAll(userId, req.query);
     sendResponse(res, STATUS_CODES.SUCCESS, true, "Feeds retrieved successfully", result.feeds);
   });
 
@@ -31,16 +32,18 @@ export class FeedController {
 
   // ---- GET FEED POST BY AUTHOR ID ----
   getByAuthorId = catchAsync(async (req: Request, res: Response) => {
+    const userId = (req as any).user?._id?.toString();
     const authorId = req.params.authorId as string;
-    const result = await feedService.getByAuthorId(authorId, req.query);
+    const result = await feedService.getByAuthorId(userId, authorId, req.query);
     sendResponse(res, STATUS_CODES.SUCCESS, true, "Feeds by author retrieved successfully", result.feeds);
   });
 
 
   // ---- GET FEED POST BY ID ----
   getById = catchAsync(async (req: Request, res: Response) => {
+    const userId = (req as any).user?._id?.toString();
     const id = req.params.id as string;
-    const result = await feedService.getById(id);
+    const result = await feedService.getById(userId, id);
     sendResponse(res, STATUS_CODES.SUCCESS, true, "Feed post retrieved successfully", result);
   });
 
