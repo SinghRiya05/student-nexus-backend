@@ -19,6 +19,7 @@ import StudentProfileModel from "../models/student.profile.model";
 import AluminiProfileModel from "../models/alumini.profile";
 import TeacherProfileModel from "../models/teacher.profile.model";
 import { Types } from "mongoose";
+import { followModel } from "../models/follow.model";
 
 export class AuthService {
   // ------ REGISTRATION FIRST STEP ------
@@ -572,4 +573,29 @@ export class AuthService {
     return await this.getById(userId);
   };
 
+
+  getMutualFollowers = async (currentUserId: string) => {
+    const user = await userModel.findById(currentUserId);
+    if (!user) throw new Error("User not found");
+    console.log(currentUserId)
+    const following = await followModel.find({
+      follower: currentUserId,
+      status: "ACCEPTED"
+    }).select("following")
+    const followingIds = following.map((follow) => follow.following)
+    console.log(followingIds)
+    const muttualFollows = await followModel.find({
+      follower: { $in: followingIds },
+      following: currentUserId,
+      status: "ACCEPTED"
+    }).populate({
+      path: "follower",
+      select: "firstName lastName avatar"
+    })
+    const muttualFollowsIds = muttualFollows.map((follow) => follow.follower)
+    return muttualFollowsIds;
+  }
+
 }
+
+

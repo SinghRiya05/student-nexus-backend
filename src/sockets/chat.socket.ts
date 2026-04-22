@@ -42,9 +42,13 @@ export const chatSocketHandler = (io: Server, socket: Socket) => {
 
 
   // ----- MESSAGE SEEN / READ RECEIPT -----
-  socket.on("message_seen", async (data: { messageId: string; chatId: string }) => {
+  socket.on("message_seen", async (data: { messageId?: string; chatId: string }) => {
     try {
-      socket.in(data.chatId).emit("message_seen", data);
+      const { messageId, chatId } = data;
+      // Perform bulk mark as read for this user in this chat
+      await chatService.markChatAsRead(user._id, chatId);
+      // Emit seen event to others in the room
+      socket.in(chatId).emit("message_seen", data);
     } catch (error) {
       console.error("Error handling message_seen:", error);
     }

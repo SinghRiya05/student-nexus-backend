@@ -40,6 +40,7 @@ authRouter.post("/logout", authMiddleware, authController.logout);
 authRouter.delete("/delete-user/:id", authController.deleteUser);
 authRouter.get("/get-all-users", authMiddleware, authController.getAllUsers);
 authRouter.get("/get-me", authMiddleware, authController.getMe);
+authRouter.get("/getMutualFollowers", authMiddleware, authController.getMutualFollowers);
 authRouter.get("/get-user-by-email/:email", authController.getUserByEmail);
 authRouter.get("/get-by-id/:id", authMiddleware, authController.getById);
 authRouter.patch(

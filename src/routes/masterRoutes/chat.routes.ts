@@ -26,4 +26,10 @@ chatRouter.get("/messages/:chatId", validateRequest(fetchMessagesSchema), chatCo
 // Send a message via REST
 chatRouter.post("/message", validateRequest(sendMessageSchema), chatController.sendMessage);
 
+// Clear chat messages
+chatRouter.delete("/clear/:chatId", chatController.clearChat);
+
+// Delete chat conversation
+chatRouter.delete("/:chatId", chatController.deleteChat);
+
 export default chatRouter;

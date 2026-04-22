@@ -24,9 +24,7 @@ export class AuthController {
         const { email, otp } = req.body;
         const ip = req.ip || "";
         const userAgent = req.headers["user-agent"] || "";
-
         const user = await authService.verifyEmail(email, otp, ip, userAgent);
-
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Email verified successfully.", user);
     });
 
@@ -34,12 +32,9 @@ export class AuthController {
         const { email, password } = req.body;
         const ip = req.ip || "";
         const userAgent = req.headers["user-agent"] || "";
-
         const { user, accessToken, refreshToken } = await authService.loginUser(email, password, ip, userAgent);
-
         sendAccessTokenCookie(res, accessToken);
         sendRefreshTokenCookie(res, refreshToken);
-
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Login successful.", { user, accessToken, refreshToken });
     });
 
@@ -47,36 +42,27 @@ export class AuthController {
         const { userId, ...registrationData } = req.body;
         const ip = req.ip || "";
         const userAgent = req.headers["user-agent"] || "";
-
         const { user, accessToken, refreshToken } = await authService.completeRegistration(userId, registrationData, ip, userAgent);
-
         sendAccessTokenCookie(res, accessToken);
         sendRefreshTokenCookie(res, refreshToken);
-
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Registration completed successfully.", { user, accessToken, refreshToken });
     });
 
     refreshToken = catchAsync(async (req: Request, res: Response) => {
         const token = req.cookies.refreshToken;
         const ip = req.ip || "";
-
         const { accessToken, refreshToken: newRefreshToken } = await authService.refreshToken(token, ip);
-
         sendAccessTokenCookie(res, accessToken);
         sendRefreshTokenCookie(res, newRefreshToken);
-
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Token refreshed successfully.", { accessToken, refreshToken: newRefreshToken });
     });
 
     logout = catchAsync(async (req: Request, res: Response) => {
         const token = req.cookies.refreshToken;
         const ip = req.ip || "";
-
         await authService.logout(token, ip);
-
         clearAccessTokenCookie(res);
         clearRefreshTokenCookie(res);
-
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Logout successful.");
     });
 
@@ -114,80 +100,58 @@ export class AuthController {
         const userId = (req as any).user?._id;
         const user = await userModel.findById(userId);
         if (!user) throw new Error("User not found");
-
         user.isPrivate = !user.isPrivate;
         await user.save();
-
         sendResponse(res, STATUS_CODES.SUCCESS, true, `Account is now ${user.isPrivate ? "Private" : "Public"}.`, { isPrivate: user.isPrivate });
     });
 
-    
+
     updateProfile = catchAsync(async (req: Request, res: Response) => {
         const userId = (req as any).user?._id;
         if (!userId) throw new Error("Unauthorized");
-
-        // ===== FILE HANDLING =====
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-
         if (files?.avatar?.length) {
             req.body.avatar = `/uploads/profiles/${files.avatar[0].filename}`;
         }
-
         if (files?.coverImage?.length) {
             req.body.coverImage = `/uploads/profiles/${files.coverImage[0].filename}`;
         }
-
-        // ===== BLOCK RESTRICTED FIELDS =====
         const restrictedFields = ["email", "roleId"];
         restrictedFields.forEach((field) => {
             if (field in req.body) {
-            delete req.body[field];
+                delete req.body[field];
             }
         });
-
-        // ===== NORMALIZE ARRAY FIELDS =====
         const arrayFields = ["courseIds", "skills", "projects"];
-
         arrayFields.forEach((field) => {
             let value = req.body[field];
-
-            // case 1: field[] (form-data)
             if (req.body[`${field}[]`]) {
-            value = req.body[`${field}[]`];
-            delete req.body[`${field}[]`];
+                value = req.body[`${field}[]`];
+                delete req.body[`${field}[]`];
             }
-
             if (value !== undefined) {
-            // If string → try parse JSON
-            if (typeof value === "string") {
-                try {
-                const parsed = JSON.parse(value);
-                req.body[field] = Array.isArray(parsed) ? parsed : [parsed];
-                } catch {
-                req.body[field] = [value];
+                if (typeof value === "string") {
+                    try {
+                        const parsed = JSON.parse(value);
+                        req.body[field] = Array.isArray(parsed) ? parsed : [parsed];
+                    } catch {
+                        req.body[field] = [value];
+                    }
+                }
+                else if (Array.isArray(value)) {
+                    req.body[field] = value;
+                }
+                else {
+                    req.body[field] = [value];
                 }
             }
-            // If already array
-            else if (Array.isArray(value)) {
-                req.body[field] = value;
-            }
-            // fallback
-            else {
-                req.body[field] = [value];
-            }
-            }
         });
-
-        // ===== NORMALIZE ID FIELDS =====
         ["universityId", "semesterId"].forEach((field) => {
             if (req.body[field] === "" || req.body[field] === "null" || req.body[field] === "undefined") {
-            delete req.body[field];
+                delete req.body[field];
             }
         });
-
-        // ===== CALL SERVICE =====
         const user = await authService.updateProfile(userId.toString(), req.body);
-
         return sendResponse(
             res,
             STATUS_CODES.SUCCESS,
@@ -195,6 +159,12 @@ export class AuthController {
             "Profile updated successfully.",
             user
         );
+    });
+
+    getMutualFollowers = catchAsync(async (req: Request, res: Response) => {
+        const userId = (req as any).user?._id;
+        const user = await authService.getMutualFollowers(userId.toString());
+        sendResponse(res, STATUS_CODES.SUCCESS, true, "Mutual followers fetched successfully.", user);
     });
 
 

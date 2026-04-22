@@ -4,7 +4,7 @@ import { messageModel } from "../models/message.model";
 import { ApiError } from "../core/ApiError";
 
 export class ChatService {
-  
+
   // ----- ACCESS OR CREATE CHAT -----
   async accessChat(currentUserId: string, targetUserId: string) {
     // Find 1:1 chat between these two users
@@ -143,6 +143,46 @@ export class ChatService {
         .populate("chat")
         .sort({ createdAt: 1 });
       return messages;
+    } catch (error: any) {
+      throw new ApiError(error.message, 400);
+    }
+  }
+
+  // ----- MARK CHAT AS READ (BULK) -----
+  async markChatAsRead(userId: string, chatId: string) {
+    try {
+      const result = await messageModel.updateMany(
+        {
+          chat: chatId,
+          sender: { $ne: userId },
+          readBy: { $ne: userId }
+        },
+        { $addToSet: { readBy: userId } }
+      );
+      return result;
+    } catch (error: any) {
+      throw new ApiError(error.message, 400);
+    }
+  }
+
+  // --- CLEAR CHAT (DELETE MESSAGES) ---
+  async clearChat(chatId: string) {
+    try {
+      const result = await messageModel.deleteMany({ chat: chatId });
+      return result;
+    } catch (error: any) {
+      throw new ApiError(error.message, 400);
+    }
+  }
+
+  // ----- DELETE CONVERSATION -----
+  async deleteChat(chatId: string) {
+    try {
+      // 1. Delete all messages first
+      await messageModel.deleteMany({ chat: chatId });
+      // 2. Delete the chat document
+      const result = await chatModel.findByIdAndDelete(chatId);
+      return result;
     } catch (error: any) {
       throw new ApiError(error.message, 400);
     }

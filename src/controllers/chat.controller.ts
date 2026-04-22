@@ -6,7 +6,7 @@ import { sendSuccessResponse, sendCreatedResponse } from "../core/responses";
 const chatService = new ChatService();
 
 export class ChatController {
-  
+
   // ----- ACCESS OR CREATE CHAT -----
   accessChat = catchAsync(async (req: Request, res: Response) => {
     const { userId } = req.body;
@@ -50,5 +50,19 @@ export class ChatController {
 
     const message = await chatService.sendMessage(senderId, chatId as string, content, messageType, attachments);
     return sendCreatedResponse(res, message, "Message sent successfully");
+  });
+
+  // ----- CLEAR CHAT -----
+  clearChat = catchAsync(async (req: Request, res: Response) => {
+    const { chatId } = req.params as any;
+    await chatService.clearChat(chatId);
+    return sendSuccessResponse(res, null, "Chat cleared successfully");
+  });
+
+  // ----- DELETE CONVERSATION -----
+  deleteChat = catchAsync(async (req: Request, res: Response) => {
+    const { chatId } = req.params as any;
+    await chatService.deleteChat(chatId);
+    return sendSuccessResponse(res, null, "Chat deleted successfully");
   });
 }
