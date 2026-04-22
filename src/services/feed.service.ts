@@ -44,7 +44,7 @@ export class FeedService {
 
 
   // ---- GET ALL FEED POSTS ----
-  getAll = async (query: any) => {
+  getAll = async (userId: string | undefined, query: any) => {
     const { page = 1, limit = 10, search, sortBy } = query;
     const skip = (Number(page) - 1) * Number(limit);
 
@@ -73,10 +73,22 @@ export class FeedService {
       })
       .sort(sort)
       .skip(skip)
-      .limit(Number(limit));
+      .limit(Number(limit))
+      .lean();
 
-    const sanitizedFeeds = feeds.map((feed) => {
+    // Check if user has liked each feed
+    const userLikes = userId
+      ? await LikeModel.find({
+          authorId: userId,
+          feedId: { $in: feeds.map((f) => f._id) },
+        }).select("feedId")
+      : [];
+
+    const likedFeedIds = new Set(userLikes.map((l) => l.feedId.toString()));
+
+    const sanitizedFeeds = feeds.map((feed: any) => {
       feed.hashtags = this.sanitizeHashtags(feed.hashtags);
+      feed.isLiked = likedFeedIds.has(feed._id.toString());
       return feed;
     });
 
@@ -95,7 +107,7 @@ export class FeedService {
 
 
   // ---- GET FEED POST BY AUTHOR ID ----
-  getByAuthorId = async (authorId: string, query: any) => {
+  getByAuthorId = async (userId: string | undefined, authorId: string, query: any) => {
     const { page = 1, limit = 10 } = query;
     const skip = (Number(page) - 1) * Number(limit);
 
@@ -112,12 +124,24 @@ export class FeedService {
       })
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(Number(limit));
+      .limit(Number(limit))
+      .lean();
+
+    // Check if user has liked each feed
+    const userLikes = userId
+      ? await LikeModel.find({
+          authorId: userId,
+          feedId: { $in: feeds.map((f) => f._id) },
+        }).select("feedId")
+      : [];
+
+    const likedFeedIds = new Set(userLikes.map((l) => l.feedId.toString()));
 
     const total = await FeedModel.countDocuments(filter);
 
-    const sanitizedFeeds = feeds.map((feed) => {
+    const sanitizedFeeds = feeds.map((feed: any) => {
       feed.hashtags = this.sanitizeHashtags(feed.hashtags);
+      feed.isLiked = likedFeedIds.has(feed._id.toString());
       return feed;
     });
 
@@ -163,26 +187,38 @@ export class FeedService {
 
 
   // ---- GET FEED POST BY ID ----
-  getById = async (id: string) => {
+  getById = async (userId: string | undefined, id: string) => {
     const feed = await FeedModel.findOne({
       _id: id,
       isDeleted: false,
-    }).populate({
-      path: "authorId",
-      select: "firstName lastName avatar roleId universityId",
-      populate: [
-        { path: "roleId", select: "name" },
-        { path: "universityId", select: "name" },
-      ],
-    });
+    })
+      .populate({
+        path: "authorId",
+        select: "firstName lastName avatar roleId universityId",
+        populate: [
+          { path: "roleId", select: "name" },
+          { path: "universityId", select: "name" },
+        ],
+      })
+      .lean();
     if (!feed) throw new NotFoundError("Feed post not found");
 
-    feed.hashtags = this.sanitizeHashtags(feed.hashtags);
+    const sanitizedFeed = feed as any;
+    sanitizedFeed.hashtags = this.sanitizeHashtags(sanitizedFeed.hashtags);
 
-    feed.viewsCount += 1;
-    await feed.save();
+    if (userId) {
+      const existingLike = await LikeModel.findOne({
+        feedId: id,
+        authorId: userId,
+      });
+      sanitizedFeed.isLiked = !!existingLike;
+    }
 
-    return feed;
+    // Update views count (don't use lean object for saving)
+    await FeedModel.updateOne({ _id: id }, { $inc: { viewsCount: 1 } });
+    sanitizedFeed.viewsCount += 1;
+
+    return sanitizedFeed;
   };
 
 

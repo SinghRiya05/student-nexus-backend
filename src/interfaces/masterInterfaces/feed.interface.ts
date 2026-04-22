@@ -9,6 +9,7 @@ export interface IFeed {
   likesCount: number;
   commentsCount: number;
   viewsCount: number;
+  isLiked?: boolean;
   isDeleted: boolean;
   createdAt?: Date;
   updatedAt?: Date;
