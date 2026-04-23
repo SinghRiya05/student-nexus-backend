@@ -5,6 +5,7 @@ import { sendAccessTokenCookie, sendRefreshTokenCookie, clearAccessTokenCookie, 
 import { catchAsync } from "../core/catchAsync";
 import { sendResponse } from "../utils/sendResponse";
 import { STATUS_CODES } from "../config";
+import uploadImageToCloudinary from "../utils/cloudinaryUpload";
 
 const authService = new AuthService();
 
@@ -111,10 +112,12 @@ export class AuthController {
         if (!userId) throw new Error("Unauthorized");
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
         if (files?.avatar?.length) {
-            req.body.avatar = `/uploads/profiles/${files.avatar[0].filename}`;
+            const { url } = await uploadImageToCloudinary(files.avatar[0]);
+            req.body.avatar = url;
         }
         if (files?.coverImage?.length) {
-            req.body.coverImage = `/uploads/profiles/${files.coverImage[0].filename}`;
+            const { url } = await uploadImageToCloudinary(files.coverImage[0]);
+            req.body.coverImage = url;
         }
         const restrictedFields = ["email", "roleId"];
         restrictedFields.forEach((field) => {

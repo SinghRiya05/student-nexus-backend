@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { sendResponse } from "../utils/sendResponse";
 import { STATUS_CODES } from "../config";
 import { catchAsync } from "../core/catchAsync";
+import uploadImageToCloudinary from "../utils/cloudinaryUpload";
 
 const universityService = new UniversityService();
 
@@ -10,11 +11,19 @@ export class UniversityController {
 
     createUniversity = catchAsync(async (req: Request, res: Response) => {
         const files = req.files as {
-            image?: { path: string }[];
-            logo?: { path: string }[];
+            image?: Express.Multer.File[];
+            logo?: Express.Multer.File[];
         };
-        const image = files?.image?.[0]?.path;
-        const logo = files?.logo?.[0]?.path;
+        let image = "";
+        let logo = "";
+        if (files?.image?.[0]) {
+            const uploadedImage = await uploadImageToCloudinary(files.image[0]);
+            image = uploadedImage.url;
+        }
+        if (files?.logo?.[0]) {
+            const uploadedLogo = await uploadImageToCloudinary(files.logo[0]);
+            logo = uploadedLogo.url;
+        }
         const university = await universityService.createUniversity({ ...req.body, image, logo });
         sendResponse(res, STATUS_CODES.CREATED, true, "University created successfully", university);
     });

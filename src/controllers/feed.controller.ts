@@ -3,6 +3,7 @@ import { FeedService } from "../services/feed.service";
 import { sendResponse } from "../utils/sendResponse";
 import { catchAsync } from "../core/catchAsync";
 import { STATUS_CODES } from "../config";
+import uploadImageToCloudinary from "../utils/cloudinaryUpload";
 
 const feedService = new FeedService();
 
@@ -10,7 +11,11 @@ export class FeedController {
   // ---- CREATE FEED POST ----
   create = catchAsync(async (req: Request, res: Response) => {
     const userId = (req as any).user._id.toString();
-    const result = await feedService.create(userId, req.body, req.file);
+    if (req.file) {
+      const { url } = await uploadImageToCloudinary(req.file);
+      req.body.media = url;
+    }
+    const result = await feedService.create(userId, req.body);
     sendResponse(res, STATUS_CODES.CREATED, true, "Feed post created successfully", result);
   });
 
@@ -52,7 +57,11 @@ export class FeedController {
   update = catchAsync(async (req: Request, res: Response) => {
     const userId = (req as any).user._id.toString();
     const id = req.params.id as string;
-    const result = await feedService.update(userId, id, req.body, req.file);
+    if (req.file) {
+      const { url } = await uploadImageToCloudinary(req.file);
+      req.body.media = url;
+    }
+    const result = await feedService.update(userId, id, req.body);
     sendResponse(res, STATUS_CODES.SUCCESS, true, "Feed post updated successfully", result);
   });
 

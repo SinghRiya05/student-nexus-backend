@@ -25,6 +25,10 @@ const envSchema = z.object({
   SERVER_SELECTION_TIMEOUT_MS: z.coerce.number().min(1000),
   SOCKET_TIMEOUT_MS: z.coerce.number().min(1000),
 
+  CLOUDINARY_CLOUD_NAME: z.string().min(1),
+  CLOUDINARY_API_KEY: z.string().min(1),
+  CLOUDINARY_API_SECRET: z.string().min(1),
+
   JWT_SECRET: z.string().min(10),
   ACCESS_TOKEN_EXPIRES: z.string().min(1),
   REFRESH_TOKEN_EXPIRES: z.string().min(1),
@@ -42,7 +46,7 @@ const envSchema = z.object({
   MAIL_FROM_NAME: z.string().default("Student Nexus"),
 
   FRONTEND_URL: z.string().url(),
-  
+
   REDIS_HOST: z.string().default("127.0.0.1"),
   REDIS_PORT: z.coerce.number().default(6379),
 });

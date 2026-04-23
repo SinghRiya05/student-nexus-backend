@@ -39,7 +39,14 @@ export class FeedService {
     data.hashtags = this.sanitizeHashtags(data.hashtags);
 
     const feed = await FeedModel.create({ ...data, authorId: userId });
-    return feed;
+    return await FeedModel.findById(feed._id).populate({
+      path: "authorId",
+      select: "firstName lastName avatar roleId universityId",
+      populate: [
+        { path: "roleId", select: "name" },
+        { path: "universityId", select: "name" },
+      ],
+    });
   };
 
 
@@ -247,7 +254,14 @@ export class FeedService {
     feed.hashtags = this.sanitizeHashtags(feed.hashtags);
 
     await feed.save();
-    return feed;
+    return await FeedModel.findById(feed._id).populate({
+      path: "authorId",
+      select: "firstName lastName avatar roleId universityId",
+      populate: [
+        { path: "roleId", select: "name" },
+        { path: "universityId", select: "name" },
+      ],
+    });
   };
 
 
@@ -305,7 +319,10 @@ export class FeedService {
     feed.commentsCount += 1;
     await feed.save();
 
-    return comment;
+    return await CommentModel.findById(comment._id).populate(
+      "authorId",
+      "firstName lastName avatar"
+    );
   };
 
 
