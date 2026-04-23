@@ -7,6 +7,7 @@ import {
   sendMessageSchema,
   fetchMessagesSchema,
 } from "../../validations/chat.validation";
+import { uploadChatAttachments } from "../../middlewares/chatAttachment.middleware";
 
 const chatRouter = Router();
 const chatController = new ChatController();
@@ -24,7 +25,7 @@ chatRouter.post("/group", validateRequest(createGroupChatSchema), chatController
 chatRouter.get("/messages/:chatId", validateRequest(fetchMessagesSchema), chatController.fetchMessages);
 
 // Send a message via REST
-chatRouter.post("/message", validateRequest(sendMessageSchema), chatController.sendMessage);
+chatRouter.post("/message", uploadChatAttachments, validateRequest(sendMessageSchema), chatController.sendMessage);
 
 // Clear chat messages
 chatRouter.delete("/clear/:chatId", chatController.clearChat);

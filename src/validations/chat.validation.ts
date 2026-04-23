@@ -33,25 +33,22 @@ export const sendMessageSchema = z.object({
       content: z
         .string()
         .trim()
-        .min(1, { message: "Message content cannot be empty" })
         .optional(),
       messageType: z
         .enum(["text", "image", "video", "file"])
-        .default("text"),
-      attachments: z
-        .array(
+        .default("text")
+        .optional(),
+      attachments: z.union([
+        z.array(
           z.object({
             url: z.string().url({ message: "Attachment URL must be a valid URL" }),
             fileType: z.string().min(1, { message: "File type is required" }),
             size: z.number().positive({ message: "Attachment size must be positive" }),
           })
-        )
-        .optional(),
-    })
-    .refine(
-      (data) => data.content || (data.attachments && data.attachments.length > 0),
-      { message: "Either content or at least one attachment is required", path: ["content"] }
-    ),
+        ),
+        z.string() // In case it's stringified JSON from FormData
+      ]).optional(),
+    }),
 });
 
 // ----- FETCH MESSAGES -----
