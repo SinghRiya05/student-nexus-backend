@@ -63,7 +63,7 @@ export class ChatController {
         fileType: file.mimetype,
         size: file.size,
       }));
-      
+
       // Auto-set message type if not provided
       if (!messageType || messageType === "text") {
         const isImage = files.every(f => f.mimetype.startsWith("image/"));

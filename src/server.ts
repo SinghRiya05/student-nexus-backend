@@ -12,7 +12,7 @@ const io = setupSocket(server);
 const startServer = async () => {
     try {
         await connectDB();
-        
+
         server.listen(env.PORT, () => {
             console.log(`Server is running on port: ${env.PORT}`);
         });
