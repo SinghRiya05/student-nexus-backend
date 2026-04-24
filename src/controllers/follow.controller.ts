@@ -44,12 +44,12 @@ export class FollowController {
 
   // ----- ACCEPT FOLLOW REQUEST -----
   acceptRequest = catchAsync(async (req: Request, res: Response) => {
-    const { id: followerId } = req.params;
+    const { id: requestId } = req.params;
     const userId = (req as any).user?._id;
 
     const result = await followService.acceptRequest(
       userId as string,
-      followerId as string,
+      requestId as string,
     );
     sendResponse(
       res,
@@ -62,10 +62,10 @@ export class FollowController {
 
   // ----- REJECT FOLLOW REQUEST -----
   rejectRequest = catchAsync(async (req: Request, res: Response) => {
-    const { id: followerId } = req.params;
+    const { id: requestId } = req.params;
     const userId = (req as any).user?._id;
 
-    await followService.rejectRequest(userId as string, followerId as string);
+    await followService.rejectRequest(userId as string, requestId as string);
     sendResponse(
       res,
       STATUS_CODES.SUCCESS,

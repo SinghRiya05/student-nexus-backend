@@ -103,10 +103,10 @@ export class FollowService {
 
 
   // ----- ACCEPT FOLLOW REQUEST -----
-  acceptRequest = async (userId: string, followerId: string) => {
-    // Look for the pending request
+  acceptRequest = async (userId: string, requestId: string) => {
+    // Look for the pending request by its unique ID
     const follow = await followModel.findOne({
-      follower: new Types.ObjectId(followerId),
+      _id: new Types.ObjectId(requestId),
       following: new Types.ObjectId(userId),
     });
 
@@ -116,7 +116,7 @@ export class FollowService {
 
     if (follow.status === "ACCEPTED") {
       throw new Error(
-        `Follow relationship between ${followerId} and ${userId} is already ACCEPTED. No pending request found to accept.`,
+        `Follow relationship between ${follow.follower} and ${userId} is already ACCEPTED. No pending request found to accept.`,
       );
     }
 
@@ -128,7 +128,7 @@ export class FollowService {
       await follow.save({ session });
 
       await userModel.findByIdAndUpdate(
-        followerId,
+        follow.follower,
         { $inc: { followingCount: 1 } },
         { session },
       );
@@ -149,9 +149,9 @@ export class FollowService {
   };
 
   // ----- REJECT FOLLOW REQUEST -----
-  rejectRequest = async (userId: string, followerId: string) => {
+  rejectRequest = async (userId: string, requestId: string) => {
     const result = await followModel.findOneAndDelete({
-      follower: new Types.ObjectId(followerId),
+      _id: new Types.ObjectId(requestId),
       following: new Types.ObjectId(userId),
       status: "PENDING",
     });
