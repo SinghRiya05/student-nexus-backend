@@ -8,6 +8,7 @@ const server = http.createServer(app);
 
 // Initialize Socket.io
 const io = setupSocket(server);
+app.set("io", io);
 
 const startServer = async () => {
     try {

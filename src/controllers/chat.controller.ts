@@ -93,6 +93,18 @@ export class ChatController {
       processedAttachments
     );
 
+    // Emit socket event for real-time delivery
+    const io = req.app.get("io");
+    if (io) {
+      io.to(chatId).emit("message_received", message);
+      if (message.chat && message.chat.users) {
+        message.chat.users.forEach((u: any) => {
+          if (u._id.toString() === senderId.toString()) return;
+          io.to(u._id.toString()).emit("message_received_notification", message);
+        });
+      }
+    }
+
     return sendCreatedResponse(res, message, "Message sent successfully");
   });
 
