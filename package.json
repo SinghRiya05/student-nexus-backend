@@ -22,7 +22,8 @@
   "main": "server.ts",
   "scripts": {
     "dev": "cross-env NODE_ENV=dev nodemon src/server.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "seed": "cross-env NODE_ENV=dev npx ts-node src/scripts/seed-dummy-data.ts"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

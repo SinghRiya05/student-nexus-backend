@@ -35,7 +35,6 @@ const seedData = async () => {
           status: "ACTIVE",
           isDeleted: false,
         });
-        // console.log(`Created user: ${userData.email}`);
 
         // Create Profile
         if (userData.profile.type === "STUDENT") {
@@ -44,6 +43,7 @@ const seedData = async () => {
             semesterId: userData.semesterId || undefined,
             hobby_badge: userData.profile.hobby_badge,
             skills: userData.profile.skills,
+            projects: userData.profile.projects,
           });
         } else if (userData.profile.type === "ALUMINI") {
           await AluminiProfileModel.create({
@@ -52,6 +52,7 @@ const seedData = async () => {
             jobTitle: userData.profile.jobTitle,
             experienceYears: userData.profile.experienceYears,
             skills: userData.profile.skills,
+            projects: userData.profile.projects,
           });
         } else if (userData.profile.type === "TEACHER") {
           await TeacherProfileModel.create({
