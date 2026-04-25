@@ -1,5 +1,7 @@
 import { Schema, model, Types } from "mongoose";
 import { IFeed } from "../interfaces/masterInterfaces/feed.interface";
+import { LikeModel } from "./like.model";
+import { CommentModel } from "./comment.model";
 
 const feedSchema = new Schema<IFeed>(
   {
@@ -57,6 +59,20 @@ feedSchema.virtual("author", {
   localField: "authorId",
   foreignField: "_id",
   justOne: true,
+});
+
+feedSchema.pre("findOneAndDelete", async function () {
+  const feed = await this.model.findOne(
+    this.getFilter()
+  );
+  if (feed) {
+    await LikeModel.deleteMany({
+      feedId: feed._id
+    });
+    await CommentModel.deleteMany({
+      feedId: feed._id
+    });
+  }
 });
 
 export const FeedModel = model<IFeed>("Feed", feedSchema);

@@ -49,6 +49,8 @@ const envSchema = z.object({
 
   REDIS_HOST: z.string().default("127.0.0.1"),
   REDIS_PORT: z.coerce.number().default(6379),
+
+  OPENAI_API_KEY: z.string().min(1),
 });
 
 const env = envSchema.parse(process.env);

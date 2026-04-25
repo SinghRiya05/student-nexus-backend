@@ -1,9 +1,5 @@
 import { userModel } from "../models/user.model";
 import RoleModel from "../models/role.model";
-import bcrypt from "bcrypt";
-import { signAccessToken, signRefreshToken } from "../core/jwt";
-import { refreshTokenModel } from "../models/refreshToken.model";
-import AluminiProfileModel from "../models/alumini.profile";
 
 export class AlumniService {
 

@@ -44,6 +44,13 @@ export class StudentService {
     const students = await userModel.find({ roleId: studentRole._id, _id: { $ne: authUserId }, isDeleted: false })
       .populate("universityId")
       .populate("courseIds")
+      .populate({
+        path: "studentProfile",
+        populate: {
+          path: "semesterId",
+          select: "name"
+        }
+      })
       .select("-password");
     return students;
   };
@@ -62,6 +69,13 @@ export class StudentService {
     })
       .populate("universityId")
       .populate("courseIds")
+      .populate({
+        path: "studentProfile",
+        populate: {
+          path: "semesterId",
+          select: "name"
+        }
+      })
       .select("-password");
     return students;
   };
@@ -87,11 +101,20 @@ export class StudentService {
           from: "studentprofiles",
           localField: "_id",
           foreignField: "userId",
-          as: "profile"
+          as: "studentProfile"
         }
       },
-      { $unwind: "$profile" },
-      { $match: { "profile.hobby_badge": hobby_badge } },
+      { $unwind: "$studentProfile" },
+      {
+        $lookup: {
+          from: "semesters",
+          localField: "studentProfile.semesterId",
+          foreignField: "_id",
+          as: "studentProfile.semesterId"
+        }
+      },
+      { $unwind: "$studentProfile.semesterId" },
+      { $match: { "studentProfile.hobby_badge": hobby_badge } },
     ]);
 
     return students;
@@ -138,7 +161,7 @@ export class StudentService {
       .filter(student => profileMap.has(student._id.toString()))
       .map(student => ({
         ...student.toObject(),
-        profile: profileMap.get(student._id.toString())
+        studentProfile: profileMap.get(student._id.toString())
       }));
 
     return result;
@@ -180,7 +203,14 @@ export class StudentService {
     ]);
     return await userModel.populate(students, [
       { path: "universityId" },
-      { path: "courseIds" }
+      { path: "courseIds" },
+      {
+        path: "studentProfile",
+        populate: {
+          path: "semesterId",
+          select: "name"
+        }
+      }
     ]);
   };
 }
