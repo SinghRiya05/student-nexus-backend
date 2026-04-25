@@ -164,27 +164,55 @@ export class FollowService {
   getFollowers = async (userId: string) => {
     return await followModel
       .find({ following: new Types.ObjectId(userId) })
-      .populate("follower", "firstName lastName avatar bio");
+      .populate({
+        path: "follower",
+        select: "firstName lastName avatar bio roleId",
+        populate: {
+          path: "roleId",
+          select: "name",
+        },
+      });
   };
 
   // ----- GET FOLLOWING -----
   getFollowing = async (userId: string) => {
     return await followModel
       .find({ follower: new Types.ObjectId(userId) })
-      .populate("following", "firstName lastName avatar bio");
+      .populate({
+        path: "following",
+        select: "firstName lastName avatar bio roleId",
+        populate: {
+          path: "roleId",
+          select: "name",
+        },
+      });
   };
 
   // ----- GET PENDING REQUESTS -----
   getPendingRequests = async (userId: string) => {
     return await followModel
       .find({ following: new Types.ObjectId(userId), status: "PENDING" })
-      .populate("follower", "firstName lastName avatar bio");
+      .populate({
+        path: "follower",
+        select: "firstName lastName avatar bio roleId",
+        populate: {
+          path: "roleId",
+          select: "name",
+        },
+      });
   };
 
   // ----- GET SENT REQUESTS -----
   getSentRequests = async (userId: string) => {
     return await followModel
       .find({ follower: new Types.ObjectId(userId), status: "PENDING" })
-      .populate("following", "firstName lastName avatar bio");
+      .populate({
+        path: "following",
+        select: "firstName lastName avatar bio roleId",
+        populate: {
+          path: "roleId",
+          select: "name",
+        },
+      });
   };
 }

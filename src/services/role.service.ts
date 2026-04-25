@@ -1,4 +1,5 @@
 import RoleModel from "../models/role.model";
+import { userModel } from "../models/user.model";
 import { IRole } from "../interfaces/masterInterfaces/role.interface"
 import { NotFoundError, ConflictError } from "../core/errors";
 
@@ -44,5 +45,15 @@ export class RoleService {
         const deletedRole = await RoleModel.findByIdAndDelete(id);
         if (!deletedRole) throw new NotFoundError("Role not found");
         return deletedRole;
+    };
+
+    assignRole = async (userId: string, roleId: string) => {
+        const role = await RoleModel.findById(roleId);
+        if (!role) throw new NotFoundError("Role not found");
+        const user = await userModel.findById(userId);
+        if (!user) throw new NotFoundError("User not found");
+        user.roleId = role._id;
+        await user.save();
+        return user;
     };
 }

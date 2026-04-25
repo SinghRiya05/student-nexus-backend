@@ -41,13 +41,23 @@ export class UniversityController {
 
     updateUniversity = catchAsync(async (req: Request, res: Response) => {
         const files = req.files as {
-            image?: { path: string }[];
-            logo?: { path: string }[];
+            image?: Express.Multer.File[];
+            logo?: Express.Multer.File[];
         };
-        const image = files?.image?.[0]?.path;
-        const logo = files?.logo?.[0]?.path;
+        
+        const updateData: any = { ...req.body };
+        
+        if (files?.image?.[0]) {
+            const uploadedImage = await uploadImageToCloudinary(files.image[0]);
+            updateData.image = uploadedImage.url;
+        }
+        if (files?.logo?.[0]) {
+            const uploadedLogo = await uploadImageToCloudinary(files.logo[0]);
+            updateData.logo = uploadedLogo.url;
+        }
+
         const id = req.params.id as string;
-        const university = await universityService.updateUniversity(id, { ...req.body, image, logo });
+        const university = await universityService.updateUniversity(id, updateData);
         sendResponse(res, STATUS_CODES.SUCCESS, true, "University updated successfully", university);
     });
 

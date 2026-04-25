@@ -29,4 +29,10 @@ export class RoleController {
     const result = await roleService.delete(id);
     sendResponse(res, STATUS_CODES.SUCCESS, true, "Role deleted successfully.", result)
   }
+
+  assignRole = async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    const result = await roleService.assignRole(id, req.body.roleId);
+    sendResponse(res, STATUS_CODES.SUCCESS, true, "Role assigned successfully.", result)
+  }
 }
