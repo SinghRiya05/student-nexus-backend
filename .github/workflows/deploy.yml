@@ -18,7 +18,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             echo "Go to backend"
-            cd ${{ secrets.EC2_BACKEND_TARGET_DIR }}
+            cd /var/www/html/myapp/student-nexus-backend
 
             echo "Pull backend"
             git pull origin main
@@ -30,6 +30,6 @@ jobs:
             git pull origin main
 
             echo "Restart Docker"
-            cd ../student-nexus-backend
+            cd /var/www/html/myapp/student-nexus-backend
             docker-compose down
             docker-compose up -d --build
