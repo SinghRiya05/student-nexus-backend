@@ -38,3 +38,5 @@ jobs:
             cd student-nexus-backend
             docker-compose down || true
             docker-compose up -d --build
+
+          
