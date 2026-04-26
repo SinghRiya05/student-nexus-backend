@@ -1,4 +1,4 @@
-name: Deploy to EC2 (Docker)
+name: Deploy Backend
 
 on:
   push:
@@ -20,23 +20,17 @@ jobs:
             set -e
 
             BASE_DIR="/var/www/html/myapp"
-
-            mkdir -p $BASE_DIR
             cd $BASE_DIR
 
-            echo "Clean old folders"
-            rm -rf student-nexus-backend
-            rm -rf student-nexus-frontend
+            echo "Setup backend repo"
+            if [ ! -d "student-nexus-backend/.git" ]; then
+              git clone git@github.com:SinghRiya05/student-nexus-backend.git
+            else
+              cd student-nexus-backend
+              git pull origin main
+              cd ..
+            fi
 
-            echo "Cloning backend"
-            git clone git@github.com:SinghRiya05/student-nexus-backend.git
-
-            echo "Cloning frontend"
-            git clone git@github.com:SinghRiya05/student-nexus-frontend.git
-
-            echo "Restart Docker"
+            echo "Restart ONLY backend"
             cd student-nexus-backend
-            docker-compose down || true
-            docker-compose up -d --build
-
-          
+            docker-compose up -d --build backend
