@@ -5,6 +5,7 @@ import { verifyAccessToken } from "../core/jwt";
 import { userModel } from "../models/user.model";
 import { chatSocketHandler } from "./chat.socket";
 import { callSocketHandler } from "./call.socket";
+import { followSocketHandler } from "./follow.socket";
 
 export const setupSocket = (server: any) => {
   const allowedOrigins = (env.CORS_ORIGINS as string || "")
@@ -40,10 +41,12 @@ export const setupSocket = (server: any) => {
 
 
   io.use(async (socket, next) => {
+    console.log("Socket: Middleware - Auth check...");
     try {
       const token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(" ")[1];
 
       if (!token) {
+        console.warn("Socket: No token provided");
         return next(new Error("Authentication error: No token provided"));
       }
 
@@ -51,27 +54,32 @@ export const setupSocket = (server: any) => {
       const user = await userModel.findById(decoded.userId).select("-password");
 
       if (!user) {
+        console.warn("Socket: User not found for token");
         return next(new Error("Authentication error: User not found"));
       }
 
       (socket as any).user = user;
+      console.log(`Socket: Authenticated user ${user.firstName} (${user._id})`);
       next();
-    } catch {
+    } catch (err: any) {
+      console.error("Socket: Authentication failed:", err.message);
       next(new Error("Authentication error: Invalid token"));
     }
   });
 
   io.on("connection", (socket) => {
     const user = (socket as any).user;
-    console.log(`User connected: ${user.firstName} [${socket.id}]`);
+    console.log(`Socket: Connection established: ${user.firstName} [${socket.id}]`);
 
     socket.join(user._id.toString());
+    console.log(`Socket: User ${user._id} joined room ${user._id.toString()}`);
 
     chatSocketHandler(io, socket);
     callSocketHandler(io, socket);
+    followSocketHandler(io, socket);
 
-    socket.on("disconnect", () => {
-      console.log(`User disconnected: ${user.firstName}`);
+    socket.on("disconnect", (reason) => {
+      console.log(`Socket: User disconnected: ${user.firstName} - Reason: ${reason}`);
     });
   });
 
