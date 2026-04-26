@@ -12,7 +12,28 @@ jobs:
 
     steps:
       - name: Checkout the files
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build TypeScript project
+        run: npm run build  
+
+      - name: Check SSH connection  
+        uses: appleboy/ssh-action@master  
+        with:  
+          host: ${{ secrets.EC2_BACKEND_HOST }}  
+          username: ${{ secrets.EC2_BACKEND_USERNAME }}  
+          key: ${{ secrets.EC2_KEY }}  
+          script: |  
+            echo "SSH connection successful"  
+            whoami
 
       - name: Deploy to Server
         uses: easingthemes/ssh-deploy@main
@@ -29,10 +50,10 @@ jobs:
           username: ${{ secrets.EC2_BACKEND_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            cd /var/www/html/myapp/backend
+            cd ${{ secrets.EC2_BACKEND_TARGET_DIR }}
             git pull origin main
             npm install
             npm run build
-            pm2 restart backend-app || pm2 start npm --name "backend-app" -- start
-            pm2 save
-            pm2 restart backend-app --update-env
+            # pm2 restart backend-app || pm2 start npm --name "backend-app" -- start
+            # pm2 save
+            # pm2 restart backend-app --update-env
