@@ -30,5 +30,7 @@ jobs:
             # Restart or start backend with PM2
             pm2 restart backend-app || pm2 start index.js --name "backend-app"
 
+            pm2 restart backend-app --update-env
+
             # Save PM2 process list
             pm2 save
