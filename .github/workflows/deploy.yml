@@ -17,19 +17,33 @@ jobs:
           username: ${{ secrets.EC2_BACKEND_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            echo "Go to backend"
-            cd /var/www/html/myapp/student-nexus-backend
+            set -e
 
-            echo "Pull backend"
-            git pull origin main
+            BASE_DIR="/var/www/html/myapp"
 
-            echo "Go to frontend"
-            cd ../student-nexus-frontend
+            echo "Create base dir"
+            mkdir -p $BASE_DIR
+            cd $BASE_DIR
 
-            echo "Pull frontend"
-            git pull origin main
+            echo "Setup backend"
+            if [ ! -d "student-nexus-backend/.git" ]; then
+              git clone git@github.com:SinghRiya05/student-nexus-backend.git
+            else
+              cd student-nexus-backend
+              git pull origin main
+              cd ..
+            fi
+
+            echo "Setup frontend"
+            if [ ! -d "student-nexus-frontend/.git" ]; then
+              git clone git@github.com:SinghRiya05/student-nexus-frontend.git
+            else
+              cd student-nexus-frontend
+              git pull origin main
+              cd ..
+            fi
 
             echo "Restart Docker"
-            cd /var/www/html/myapp/student-nexus-backend
+            cd student-nexus-backend
             docker-compose down
             docker-compose up -d --build
