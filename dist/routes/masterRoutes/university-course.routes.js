@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const validateRequest_1 = require("../../middlewares/validateRequest");
+const university_course_validation_1 = require("../../validations/university-course.validation");
+const university_course_controller_1 = require("../../controllers/university-course.controller");
+const router = (0, express_1.Router)();
+const universityCourseController = new university_course_controller_1.UniversityCourseController();
+router.post("/", (0, validateRequest_1.validateRequest)(university_course_validation_1.assignCourseSchema), universityCourseController.assignCourse);
+router.delete("/", universityCourseController.removeCourse);
+router.get("/university/:id", (0, validateRequest_1.validateRequest)(university_course_validation_1.universityCourseIdParamsSchema), universityCourseController.getCoursesByUniversity);
+router.get("/course/:id", (0, validateRequest_1.validateRequest)(university_course_validation_1.universityCourseIdParamsSchema), universityCourseController.getUniversitiesByCourse);
+router.post("/sync", (0, validateRequest_1.validateRequest)(university_course_validation_1.syncUniversityCoursesSchema), universityCourseController.syncUniversityCourses);
+router.post("/bulk-remove", (0, validateRequest_1.validateRequest)(university_course_validation_1.assignCourseSchema), universityCourseController.bulkRemoveCourses);
+exports.default = router;

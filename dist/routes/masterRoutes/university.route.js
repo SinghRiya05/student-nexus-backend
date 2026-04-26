@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const university_controller_1 = require("../../controllers/university.controller");
+const validateRequest_1 = require("../../middlewares/validateRequest");
+const express_1 = require("express");
+const imageUpload_middleware_1 = require("../../middlewares/imageUpload.middleware");
+const university_validation_1 = require("../../validations/university.validation");
+const router = (0, express_1.Router)();
+const universityController = new university_controller_1.UniversityController();
+router.post("/", imageUpload_middleware_1.uploadImage.fields([{ name: "image", maxCount: 1 }, { name: "logo", maxCount: 1 }]), (0, validateRequest_1.validateRequest)(university_validation_1.createUniversitySchema), universityController.createUniversity);
+router.put("/:id", imageUpload_middleware_1.uploadImage.fields([{ name: "image", maxCount: 1 }, { name: "logo", maxCount: 1 }]), (0, validateRequest_1.validateRequest)(university_validation_1.updateUniversitySchema), universityController.updateUniversity);
+router.delete("/:id", (0, validateRequest_1.validateRequest)(university_validation_1.universityIdParamsSchema), universityController.deleteUniversity);
+router.get("/:id", (0, validateRequest_1.validateRequest)(university_validation_1.universityIdParamsSchema), universityController.getUniversityById);
+router.get("/", universityController.getAllUniversities);
+exports.default = router;

@@ -1,4 +1,4 @@
-name: Push-to-EC2
+name: Deploy to EC2 (Docker)
 
 on:
   push:
@@ -7,40 +7,29 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to EC2 on main branch push
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout the files
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build TypeScript project
-        run: npm run build  
-
-      - name: Deploy to Server (SCP)
-        uses: easingthemes/ssh-deploy@main
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_KEY }}
-          REMOTE_HOST: ${{ secrets.EC2_BACKEND_HOST }}
-          REMOTE_USER: ${{ secrets.EC2_BACKEND_USERNAME }}
-          TARGET: ${{ secrets.EC2_BACKEND_TARGET_DIR }}
-
-      - name: Execute remote SSH commands
-        uses: appleboy/ssh-action@master
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_BACKEND_HOST }}
           username: ${{ secrets.EC2_BACKEND_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
           script: |
+            echo "Go to backend"
             cd ${{ secrets.EC2_BACKEND_TARGET_DIR }}
-            npm install --production
-            pm2 restart backend-app || pm2 start dist/index.js --name backend-app
-            pm2 save
+
+            echo "Pull backend"
+            git pull origin main
+
+            echo "Go to frontend"
+            cd ../student-nexus-frontend
+
+            echo "Pull frontend"
+            git pull origin main
+
+            echo "Restart Docker"
+            cd ../student-nexus-backend
+            docker-compose down
+            docker-compose up -d --build

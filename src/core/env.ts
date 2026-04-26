@@ -6,7 +6,7 @@ const CURRENT_ENV =
   (process.env.NODE_ENV as NODEENV)?.toLowerCase().trim() || NODEENV.DEV;
 
 if (NODEENV.DEV.toLowerCase().trim() == CURRENT_ENV) {
-  dotenv.config({ path: ".env.development" });
+  dotenv.config({ path: ".env" });
 }
 
 const envSchema = z.object({
