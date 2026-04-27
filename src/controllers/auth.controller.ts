@@ -188,4 +188,14 @@ export class AuthController {
         await authService.verifyResetOtp(email, otp);
         sendResponse(res, STATUS_CODES.SUCCESS, true, "Reset OTP verified successfully.");
     });
+
+    searchUsers = catchAsync(async (req: Request, res: Response) => {
+        const { query } = req.query;
+        const userId = (req as any).user?._id;
+        if (!query || typeof query !== 'string') {
+            return sendResponse(res, STATUS_CODES.BAD_REQUEST, false, "Query parameter is required.");
+        }
+        const users = await authService.searchUsers(query, userId.toString());
+        sendResponse(res, STATUS_CODES.SUCCESS, true, "Users searched successfully.", users);
+    });
 }

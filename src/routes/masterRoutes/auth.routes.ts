@@ -63,4 +63,6 @@ authRouter.post("/forgot-password", authController.forgotPassword);
 authRouter.post("/reset-password", authController.resetPassword);
 authRouter.post("/verify-reset-otp", authController.verifyResetOtp);
 
+authRouter.get("/search-users", authMiddleware, authController.searchUsers);
+
 export default authRouter;

@@ -596,6 +596,128 @@ export class AuthService {
     return muttualFollowsIds;
   }
 
+
+
+  // ------- SEARCH USERS -------
+  searchUsers = async (query: string, currentUserId: string) => {
+    const users = await userModel.aggregate([
+      {
+        $match: {
+          _id: { $ne: new Types.ObjectId(currentUserId) },
+          isDeleted: { $ne: true }
+        }
+      },
+      {
+        $addFields: {
+          fullName: { $concat: ["$firstName", " ", "$lastName"] }
+        }
+      },
+      {
+        $lookup: {
+          from: 'courses',
+          localField: 'courseIds',
+          foreignField: '_id',
+          as: 'courses'
+        }
+      },
+      {
+        $lookup: {
+          from: 'universities',
+          localField: 'universityId',
+          foreignField: '_id',
+          as: 'university'
+        }
+      },
+      {
+        $lookup: {
+          from: 'studentprofiles',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'studentProfile'
+        }
+      },
+      {
+        $unwind: {
+          path: '$studentProfile',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: 'semesters',
+          localField: 'studentProfile.semesterId',
+          foreignField: '_id',
+          as: 'semester'
+        }
+      },
+      {
+        $unwind: {
+          path: '$semester',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: 'aluminiprofiles',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'aluminiProfile'
+        }
+      },
+      {
+        $unwind: {
+          path: '$aluminiProfile',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: 'teacherprofiles',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'teacherProfile'
+        }
+      },
+      {
+        $unwind: {
+          path: '$teacherProfile',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $match: {
+          $or: [
+            { firstName: { $regex: query, $options: 'i' } },
+            { lastName: { $regex: query, $options: 'i' } },
+            { fullName: { $regex: query, $options: 'i' } },
+            { email: { $regex: query, $options: 'i' } },
+            { 'courses.courseName': { $regex: query, $options: 'i' } },
+            { 'university.name': { $regex: query, $options: 'i' } },
+            { 'semester.name': { $regex: query, $options: 'i' } },
+            { 'aluminiProfile.currentCompany': { $regex: query, $options: 'i' } },
+            { 'aluminiProfile.jobTitle': { $regex: query, $options: 'i' } },
+            { 'teacherProfile.designation': { $regex: query, $options: 'i' } },
+            { 'teacherProfile.department': { $regex: query, $options: 'i' } }
+          ]
+        }
+      },
+      {
+        $project: {
+          firstName: 1,
+          lastName: 1,
+          email: 1,
+          avatar: 1,
+          courses: { courseName: 1, course_short_name: 1 },
+          university: { name: 1, short_name: 1 },
+          semester: { name: 1 },
+          aluminiProfile: { currentCompany: 1, jobTitle: 1 },
+          teacherProfile: { designation: 1, department: 1 }
+        }
+      }
+    ]);
+    return users;
+  }
+
 }
 
 
