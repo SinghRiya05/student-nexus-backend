@@ -33,4 +33,4 @@ jobs:
 
             echo "Restart ONLY backend"
             cd student-nexus-backend
-            docker-compose up -d --build backend
+            docker compose up -d --build backend
