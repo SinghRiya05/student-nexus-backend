@@ -8,6 +8,7 @@ RUN npm install
 
 COPY . .
 RUN npm run build
+RUN cp -R src/templates dist/templates
 
 # -------- Stage 2: Production --------
 FROM node:22-alpine
