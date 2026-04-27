@@ -23,6 +23,8 @@ services:
       - "3000:3000"
     depends_on:
       - backend
+    env_file:
+      - ../student-nexus-frontend/.env
 
   redis:
     image: redis:7-alpine
