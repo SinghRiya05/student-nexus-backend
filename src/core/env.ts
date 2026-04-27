@@ -38,6 +38,7 @@ const envSchema = z.object({
     .transform((val) => val === "true"),
 
   COOKIE_SAMESITE: z.enum(["lax", "strict", "none"]),
+  COOKIE_DOMAIN: z.string().optional(),
 
   MAIL_HOST: z.string().min(1),
   MAIL_PORT: z.coerce.number().min(1).max(65535),

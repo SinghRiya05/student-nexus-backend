@@ -9,6 +9,7 @@ export function sendRefreshTokenCookie(res: Response, token: string) {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? "none" : "lax",
+    domain: env.COOKIE_DOMAIN,
     maxAge: parseExpiryToMs(env.REFRESH_TOKEN_EXPIRES),
     path: "/",
   });
@@ -19,6 +20,7 @@ export function sendAccessTokenCookie(res: Response, token: string) {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? "none" : "lax",
+    domain: env.COOKIE_DOMAIN,
     maxAge: parseExpiryToMs(env.ACCESS_TOKEN_EXPIRES),
     path: "/",
   });
@@ -29,6 +31,7 @@ export function clearRefreshTokenCookie(res: Response) {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? "none" : "lax",
+    domain: env.COOKIE_DOMAIN,
     path: "/",
   });
 }
@@ -38,6 +41,7 @@ export function clearAccessTokenCookie(res: Response) {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? "none" : "lax",
+    domain: env.COOKIE_DOMAIN,
     path: "/",
   });
 }
