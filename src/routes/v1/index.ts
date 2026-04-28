@@ -17,6 +17,7 @@ import alumniRouter from "../masterRoutes/alumni.routes";
 import teacherRouter from "../masterRoutes/teachers.routes";
 import feedRouter from "../masterRoutes/feed.routes";
 import aiRouter from "../masterRoutes/ai.route";
+import dashboardRouter from "../masterRoutes/dashboard.routes";
 import { middleware as authMiddleware } from "../../middlewares/authMiddleware";
 
 const router = Router();
@@ -39,5 +40,6 @@ router.use("/alumni", alumniRouter);
 router.use("/teachers", authMiddleware, teacherRouter);
 router.use("/feeds", feedRouter);
 router.use("/ai", authMiddleware, aiRouter);
+router.use("/dashboard", dashboardRouter);
 
 export default router;
