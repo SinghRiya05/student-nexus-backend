@@ -39,7 +39,13 @@ export class ChatController {
   // ----- FETCH MESSAGES -----
   fetchMessages = catchAsync(async (req: Request, res: Response) => {
     const { chatId } = req.params;
-    const messages = await chatService.fetchMessages(chatId as string);
+    const { page, limit } = req.query;
+    
+    const messages = await chatService.fetchMessages(
+      chatId as string, 
+      Number(page) || 1, 
+      Number(limit) || 20
+    );
     return sendSuccessResponse(res, messages, "Messages fetched successfully");
   });
 
