@@ -135,13 +135,21 @@ export class ChatService {
   }
 
   // ----- FETCH MESSAGES -----
-  async fetchMessages(chatId: string) {
+  // ----- FETCH MESSAGES (WITH PAGINATION) -----
+  async fetchMessages(chatId: string, page: number = 1, limit: number = 20) {
     try {
+      const skip = (page - 1) * limit;
       const messages = await messageModel
         .find({ chat: chatId })
         .populate("sender", "firstName lastName avatar email")
         .populate("chat")
-        .sort({ createdAt: 1 });
+        .sort({ createdAt: -1 }) // Get newest messages first for pagination
+        .skip(skip)
+        .limit(limit);
+      
+      // Return them in chronological order for the UI if it's the first page,
+      // but usually the UI handles sorting or we return them as is.
+      // Given we are paginating "backwards" in time, newest first is better for the API.
       return messages;
     } catch (error: any) {
       throw new ApiError(error.message, 400);

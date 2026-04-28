@@ -56,4 +56,8 @@ export const fetchMessagesSchema = z.object({
   params: z.object({
     chatId: objectId,
   }),
+  query: z.object({
+    page: z.string().optional(),
+    limit: z.string().optional(),
+  }).optional(),
 });
