@@ -19,11 +19,12 @@ app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 
 ensureUploadDirs();
 
-const allowedOrigins = (env.CORS_ORIGINS as string || '').split(',').map(origin => origin.trim()).filter(Boolean);
+const allowedOrigins = (env.CORS_ORIGINS as string || '').split(',').map(origin => origin.trim().toLowerCase()).filter(Boolean);
 const originsAllowed = (origin: string) => {
-  if (allowedOrigins.includes(origin)) return true;
-  // Fallback for production domains
-  if (origin.endsWith('factglint.com')) return true;
+  const normalizedOrigin = origin.toLowerCase().replace(/\/$/, "");
+  if (allowedOrigins.includes(normalizedOrigin)) return true;
+  // Fallback for production domains and subdomains
+  if (normalizedOrigin.endsWith('factglint.com')) return true;
   return false;
 };
 
@@ -43,7 +44,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'X-Auth-Token'],
   optionsSuccessStatus: 204,
   maxAge: env.CORS_MAX_AGE,
 }));
