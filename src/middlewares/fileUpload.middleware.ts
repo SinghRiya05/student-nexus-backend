@@ -19,7 +19,7 @@ const ALLOWED_MIME_TYPES = [
   "application/rtf",
 ];
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit for documents and zips
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 10MB limit for documents and zips
 
 const createStorage = (folder: string) =>
   multer.diskStorage({
