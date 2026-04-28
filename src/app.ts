@@ -13,14 +13,19 @@ import { ensureUploadDirs } from "./utils/createUploadDirs";
 
 const app = express();
 
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "100mb" }));
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 
 ensureUploadDirs();
 
 const allowedOrigins = (env.CORS_ORIGINS as string || '').split(',').map(origin => origin.trim()).filter(Boolean);
-const originsAllowed = (origin: string) => allowedOrigins.includes(origin);
+const originsAllowed = (origin: string) => {
+  if (allowedOrigins.includes(origin)) return true;
+  // Fallback for production domains
+  if (origin.endsWith('factglint.com')) return true;
+  return false;
+};
 
 app.use((req, res, next) => {
   res.setHeader("Vary", "Origin");
