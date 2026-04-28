@@ -8,11 +8,30 @@ import { deleteFileIfExists } from "../utils/file.utils";
 export class FeedService {
 
   // ---- HELPER FUNCTIONS ----
-  private sanitizeHashtags(hashtags?: string[]): string[] {
-    if (!hashtags || !Array.isArray(hashtags) || hashtags.length === 0) {
-      return hashtags || [];
+  private sanitizeHashtags(hashtags?: any): string[] {
+    if (!hashtags) return [];
+
+    // If it's a string, try to parse it as JSON first
+    if (typeof hashtags === "string") {
+      const trimmed = hashtags.trim();
+      if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) {
+            return parsed.map((v) => String(v).trim()).filter(Boolean);
+          }
+        } catch (e) {
+          // If parsing fails, fall through to treat as single string
+        }
+      }
+      return [trimmed].filter(Boolean);
     }
 
+    if (!Array.isArray(hashtags) || hashtags.length === 0) {
+      return [];
+    }
+
+    // If it's an array with one element that is a JSON string
     if (
       hashtags.length === 1 &&
       typeof hashtags[0] === "string" &&
@@ -21,12 +40,13 @@ export class FeedService {
       try {
         const parsed = JSON.parse(hashtags[0].trim());
         if (Array.isArray(parsed)) {
-          return parsed.map((v) => String(v).trim());
+          return parsed.map((v) => String(v).trim()).filter(Boolean);
         }
       } catch (e) {
       }
     }
-    return hashtags.map((v) => String(v).trim());
+
+    return hashtags.map((v) => String(v).trim()).filter(Boolean);
   }
 
 
