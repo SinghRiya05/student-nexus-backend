@@ -629,6 +629,12 @@ export class AuthService {
         }
       },
       {
+        $unwind: {
+          path: '$university',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
         $lookup: {
           from: 'studentprofiles',
           localField: '_id',
@@ -710,6 +716,7 @@ export class AuthService {
           courses: { courseName: 1, course_short_name: 1 },
           university: { name: 1, short_name: 1 },
           semester: { name: 1 },
+          studentProfile: { _id: 1 },
           aluminiProfile: { currentCompany: 1, jobTitle: 1 },
           teacherProfile: { designation: 1, department: 1 }
         }
