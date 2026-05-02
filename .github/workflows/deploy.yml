@@ -27,7 +27,12 @@ jobs:
               git clone git@github.com:SinghRiya05/student-nexus-backend.git
             else
               cd student-nexus-backend
+              echo "Stashing local changes..."
+              git stash
+              echo "Pulling latest changes..."
               git pull origin main
+              echo "Restoring local changes..."
+              git stash pop || true
               cd ..
             fi
 
