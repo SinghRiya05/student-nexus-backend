@@ -87,10 +87,36 @@ export class FollowController {
     );
   });
 
+  // ----- GET FOLLOWERS For AI -----
+  getFollowersForAI = catchAsync(async (req: Request, res: Response) => {
+    const userId = (req as any).user?._id;
+    const followers = await followService.getFollowersForAI(userId);
+    sendResponse(
+      res,
+      STATUS_CODES.SUCCESS,
+      true,
+      "Followers list fetched successfully.",
+      followers,
+    );
+  });
+
   // ----- GET FOLLOWING -----
   getFollowing = catchAsync(async (req: Request, res: Response) => {
     const userId = (req as any).user?._id;
     const following = await followService.getFollowing(userId);
+    sendResponse(
+      res,
+      STATUS_CODES.SUCCESS,
+      true,
+      "Following list fetched successfully.",
+      following,
+    );
+  });
+
+  // ----- GET FOLLOWING For AI -----
+  getFollowingForAI = catchAsync(async (req: Request, res: Response) => {
+    const userId = (req as any).user?._id;
+    const following = await followService.getFollowingForAI(userId);
     sendResponse(
       res,
       STATUS_CODES.SUCCESS,

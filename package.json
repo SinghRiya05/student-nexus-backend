@@ -40,7 +40,9 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@openai/agents": "^0.10.0",
     "@socket.io/redis-adapter": "^8.3.0",
+    "axios": "^1.16.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.9.0",
     "cookie-parser": "^1.4.7",
@@ -59,6 +61,6 @@
     "socket.io": "^4.8.3",
     "socket.io-redis": "^5.2.0",
     "uuid": "^14.0.0",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   }
 }

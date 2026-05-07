@@ -14,6 +14,7 @@ export class CourseService {
         return await CourseModel.find();
     }
 
+
     getCourseById = async (id: string) => {
         const existingCourse = await CourseModel.findById(id);
         if (!existingCourse) throw new NotFoundError("Course not found");

@@ -173,6 +173,15 @@ export class FollowService {
         },
       });
   };
+  // ----- GET FOLLOWERS For AI -----
+  getFollowersForAI = async (userId: string) => {
+    return await followModel
+      .find({ following: new Types.ObjectId(userId) })
+      .populate({
+        path: "follower",
+        select: "firstName lastName",
+      });
+  };
 
   // ----- GET FOLLOWING -----
   getFollowing = async (userId: string) => {
@@ -185,6 +194,15 @@ export class FollowService {
           path: "roleId",
           select: "name",
         },
+      });
+  };
+  // ----- GET FOLLOWING For AI -----
+  getFollowingForAI = async (userId: string) => {
+    return await followModel
+      .find({ follower: new Types.ObjectId(userId) })
+      .populate({
+        path: "following",
+        select: "firstName lastName",
       });
   };
 

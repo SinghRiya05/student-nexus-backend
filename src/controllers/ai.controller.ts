@@ -10,7 +10,8 @@ export class AiController {
     generateAIResponse = catchAsync(async (req: Request, res: Response) => {
 
         const { messages } = req.body;
-        const response = await aiService.generateAIResponse(messages);
+        const token = req.headers.authorization as string;
+        const response = await aiService.generateAIResponse(messages, token);
         sendResponse(res, 200, true, "AI response", response);
 
     });
