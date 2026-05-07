@@ -8,8 +8,6 @@
 
 The core engine of **Student Nexus**, a robust and scalable RESTful API built with Node.js, Express, and TypeScript. It handles everything from real-time communication to AI-powered discovery.
 
---------
-
 ## 🌟 Key Features
 
 - **🔐 Secure Auth**: JWT-based authentication with Access & Refresh token rotation.
