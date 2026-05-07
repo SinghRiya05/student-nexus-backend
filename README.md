@@ -7,6 +7,7 @@
 [![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socketdotio&logoColor=white)](https://socket.io/)
 
 The core engine of **Student Nexus**, a robust and scalable RESTful API built with Node.js, Express, and TypeScript. It handles everything from real-time communication to AI-powered discovery.
+-------
 
 ## 🌟 Key Features
 
