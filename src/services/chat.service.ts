@@ -146,7 +146,7 @@ export class ChatService {
         .sort({ createdAt: -1 }) // Get newest messages first for pagination
         .skip(skip)
         .limit(limit);
-      
+
       // Return them in chronological order for the UI if it's the first page,
       // but usually the UI handles sorting or we return them as is.
       // Given we are paginating "backwards" in time, newest first is better for the API.
