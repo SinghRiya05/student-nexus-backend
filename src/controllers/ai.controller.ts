@@ -10,7 +10,7 @@ export class AiController {
     generateAIResponse = catchAsync(async (req: Request, res: Response) => {
 
         const { messages } = req.body;
-        const token = req.headers.authorization as string;
+        const token = (req.headers.authorization || (req.cookies?.accessToken ? `Bearer ${req.cookies.accessToken}` : "")) as string;
         const response = await aiService.generateAIResponse(messages, token);
         sendResponse(res, 200, true, "AI response", response);
 

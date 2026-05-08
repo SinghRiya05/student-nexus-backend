@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { Agent, run, tool } from "@openai/agents";
+import type { AgentInputItem } from "@openai/agents";
 import { z } from "zod";
 import axios from "axios";
 import env from "../core/env";
@@ -20,6 +21,10 @@ export class AiService {
             throw new BadRequestError("Messages are required");
         }
 
+        const API_BASE_URL = env.NODE_ENV === "dev"
+            ? `http://localhost:${env.PORT}/api/v1`
+            : "https://api.factglint.com/api/v1";
+
         // =========================
         // TOOL
         // =========================
@@ -35,7 +40,7 @@ export class AiService {
 
                 console.log("AI decided to call: get_courses");
 
-                const res = await axios.get("https://api.factglint.com/api/v1/course");
+                const res = await axios.get(`${API_BASE_URL}/course`);
                 return res.data.data;
             }
         });
@@ -46,7 +51,7 @@ export class AiService {
             parameters: z.object({}),
             async execute() {
                 console.log("AI decided to call: get_universities");
-                const res = await axios.get("https://api.factglint.com/api/v1/university");
+                const res = await axios.get(`${API_BASE_URL}/university`);
                 return res.data.data;
             }
         });
@@ -61,10 +66,10 @@ export class AiService {
                     "AI decided to call: get_followers"
                 );
                 const response = await axios.get(
-                    "http://localhost:5000/api/v1/follow/followers/ai",
+                    `${API_BASE_URL}/follow/followers/ai`,
                     {
                         headers: {
-                            Authorization: token
+                            Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`
                         }
                     }
                 );
@@ -80,10 +85,10 @@ export class AiService {
             async execute() {
                 console.log("AI decided to call: get_following");
                 const response = await axios.get(
-                    "http://localhost:5000/api/v1/follow/following/ai",
+                    `${API_BASE_URL}/follow/following/ai`,
                     {
                         headers: {
-                            Authorization: token
+                            Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`
                         }
                     }
                 );
@@ -134,12 +139,41 @@ export class AiService {
         // =========================
         // FORMAT MESSAGES
         // =========================
+        const formattedMessages: AgentInputItem[] = messages.map((msg) => {
 
-        const formattedMessages = messages.map((msg) => ({
-            role: msg.role,
-            content: msg.content
-        }));
+            // SYSTEM
+            if (msg.role === "system") {
+                return {
+                    role: "system",
+                    content: msg.content
+                };
+            }
 
+            // USER
+            if (msg.role === "user") {
+                return {
+                    role: "user",
+                    content: [
+                        {
+                            type: "input_text",
+                            text: msg.content
+                        }
+                    ]
+                };
+            }
+
+            // ASSISTANT
+            return {
+                role: "assistant",
+                status: "completed",
+                content: [
+                    {
+                        type: "output_text",
+                        text: msg.content
+                    }
+                ]
+            };
+        });
         console.log("Messages Sent To AI:");
         console.log(formattedMessages);
 
