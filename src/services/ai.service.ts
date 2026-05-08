@@ -4,6 +4,7 @@ import type { AgentInputItem } from "@openai/agents";
 import { z } from "zod";
 import axios from "axios";
 import env from "../core/env";
+import { redis } from "../core/redis";
 import { BadRequestError } from "../core/errors";
 
 
@@ -37,10 +38,15 @@ export class AiService {
             parameters: z.object({}),
 
             async execute() {
-
+                const cacheKey = "courses_data_from_api";
+                const cachedCourses = await redis.get(cacheKey);
+                if (cachedCourses) {
+                    console.log("Returning cached courses");
+                    return JSON.parse(cachedCourses);
+                }
                 console.log("AI decided to call: get_courses");
-
                 const res = await axios.get(`${API_BASE_URL}/course`);
+                await redis.set(cacheKey, JSON.stringify(res.data.data), "EX", 3600);
                 return res.data.data;
             }
         });
@@ -50,8 +56,16 @@ export class AiService {
             description: "Get all available universities for students",
             parameters: z.object({}),
             async execute() {
+                const cacheKey = "universities_data_from_api";
+                const cachedUniversities = await redis.get(cacheKey);
+                if (cachedUniversities) {
+                    console.log("Returning cached universities");
+                    return JSON.parse(cachedUniversities);
+                }
+
                 console.log("AI decided to call: get_universities");
                 const res = await axios.get(`${API_BASE_URL}/university`);
+                await redis.set(cacheKey, JSON.stringify(res.data.data), "EX", 3600);
                 return res.data.data;
             }
         });
