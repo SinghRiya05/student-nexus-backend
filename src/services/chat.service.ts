@@ -5,7 +5,7 @@ import { ApiError } from "../core/ApiError";
 
 export class ChatService {
 
-  // ----- ACCESS OR CREATE CHAT -----
+  // ----- ACCESS OR CREATE chat -----
   async accessChat(currentUserId: string, targetUserId: string) {
     // Find 1:1 chat between these two users
     let isChat: any = await chatModel.find({
