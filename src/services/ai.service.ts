@@ -32,24 +32,45 @@ export class AiService {
 
         const getCoursesTool = tool({
             name: "get_courses",
-
             description: "Get all available courses for students",
-
             parameters: z.object({}),
-
             async execute() {
                 const cacheKey = "courses_data_from_api";
-                const cachedCourses = await redis.get(cacheKey);
-                if (cachedCourses) {
-                    console.log("Returning cached courses");
-                    return JSON.parse(cachedCourses);
+
+                try {
+                    const cachedCourses = await redis.get(cacheKey);
+                    if (cachedCourses) {
+                        const parsed = JSON.parse(cachedCourses);
+                        if (parsed && Array.isArray(parsed)) {
+                            console.log("Returning cached courses");
+                            return parsed;
+                        }
+                    }
+                } catch (e) {
+                    console.log("Redis cache read error (courses):", e);
                 }
-                console.log("AI decided to call: get_courses");
-                const res = await axios.get(`${API_BASE_URL}/course`);
-                await redis.set(cacheKey, JSON.stringify(res.data.data), "EX", 3600);
-                return res.data.data;
+
+                console.log("Fetching fresh courses");
+                try {
+                    const res = await axios.get(`${API_BASE_URL}/course`);
+                    const courses = res.data?.data ?? res.data ?? [];
+                    console.log("Fetched courses from API");
+
+                    // Try to cache but don't fail if redis is down
+                    try {
+                        await redis.set(cacheKey, JSON.stringify(courses), "EX", 3600);
+                    } catch (redisError) {
+                        console.warn("Failed to cache courses in Redis:", redisError);
+                    }
+
+                    return courses;
+                } catch (apiError: any) {
+                    console.error("API Error fetching courses:", apiError.message);
+                    throw new Error("Failed to fetch courses from the server.");
+                }
             }
         });
+
 
         const getUniversitiesTool = tool({
             name: "get_universities",
@@ -57,18 +78,35 @@ export class AiService {
             parameters: z.object({}),
             async execute() {
                 const cacheKey = "universities_data_from_api";
-                const cachedUniversities = await redis.get(cacheKey);
-                if (cachedUniversities) {
-                    console.log("Returning cached universities");
-                    return JSON.parse(cachedUniversities);
+                try {
+                    const cachedUniversities = await redis.get(cacheKey);
+                    if (cachedUniversities) {
+                        console.log("Returning cached universities");
+                        return JSON.parse(cachedUniversities);
+                    }
+                } catch (e) {
+                    console.log("Redis cache read error (universities):", e);
                 }
 
                 console.log("AI decided to call: get_universities");
-                const res = await axios.get(`${API_BASE_URL}/university`);
-                await redis.set(cacheKey, JSON.stringify(res.data.data), "EX", 3600);
-                return res.data.data;
+                try {
+                    const res = await axios.get(`${API_BASE_URL}/university`);
+                    const universities = res.data?.data ?? res.data ?? [];
+
+                    try {
+                        await redis.set(cacheKey, JSON.stringify(universities), "EX", 3600);
+                    } catch (redisError) {
+                        console.warn("Failed to cache universities in Redis:", redisError);
+                    }
+
+                    return universities;
+                } catch (apiError: any) {
+                    console.error("API Error fetching universities:", apiError.message);
+                    throw new Error("Failed to fetch universities from the server.");
+                }
             }
         });
+
 
         const getFollowersTool = tool({
             name: "get_followers",
