@@ -17,7 +17,7 @@ export class AiService {
         model: string = "gpt-4o-mini"
     ) {
 
-        // VALIDATION
+        // VALIDATIOn
         if (!messages || !Array.isArray(messages)) {
             throw new BadRequestError("Messages are required");
         }
