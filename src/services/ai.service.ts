@@ -1,8 +1,10 @@
 import OpenAI from "openai";
 import { Agent, run, tool } from "@openai/agents";
+import type { AgentInputItem } from "@openai/agents";
 import { z } from "zod";
 import axios from "axios";
 import env from "../core/env";
+import { redis } from "../core/redis";
 import { BadRequestError } from "../core/errors";
 
 
@@ -15,10 +17,14 @@ export class AiService {
         model: string = "gpt-4o-mini"
     ) {
 
-        // VALIDATION
+        // VALIDATIOn
         if (!messages || !Array.isArray(messages)) {
             throw new BadRequestError("Messages are required");
         }
+
+        const API_BASE_URL = env.NODE_ENV === "dev"
+            ? `http://localhost:${env.PORT}/api/v1`
+            : "https://api.factglint.com/api/v1";
 
         // =========================
         // TOOL
@@ -32,10 +38,15 @@ export class AiService {
             parameters: z.object({}),
 
             async execute() {
-
+                const cacheKey = "courses_data_from_api";
+                const cachedCourses = await redis.get(cacheKey);
+                if (cachedCourses) {
+                    console.log("Returning cached courses");
+                    return JSON.parse(cachedCourses);
+                }
                 console.log("AI decided to call: get_courses");
-
-                const res = await axios.get("https://api.factglint.com/api/v1/course");
+                const res = await axios.get(`${API_BASE_URL}/course`);
+                await redis.set(cacheKey, JSON.stringify(res.data.data), "EX", 3600);
                 return res.data.data;
             }
         });
@@ -45,8 +56,16 @@ export class AiService {
             description: "Get all available universities for students",
             parameters: z.object({}),
             async execute() {
+                const cacheKey = "universities_data_from_api";
+                const cachedUniversities = await redis.get(cacheKey);
+                if (cachedUniversities) {
+                    console.log("Returning cached universities");
+                    return JSON.parse(cachedUniversities);
+                }
+
                 console.log("AI decided to call: get_universities");
-                const res = await axios.get("https://api.factglint.com/api/v1/university");
+                const res = await axios.get(`${API_BASE_URL}/university`);
+                await redis.set(cacheKey, JSON.stringify(res.data.data), "EX", 3600);
                 return res.data.data;
             }
         });
@@ -61,10 +80,10 @@ export class AiService {
                     "AI decided to call: get_followers"
                 );
                 const response = await axios.get(
-                    "http://localhost:5000/api/v1/follow/followers/ai",
+                    `${API_BASE_URL}/follow/followers/ai`,
                     {
                         headers: {
-                            Authorization: token
+                            Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`
                         }
                     }
                 );
@@ -80,10 +99,10 @@ export class AiService {
             async execute() {
                 console.log("AI decided to call: get_following");
                 const response = await axios.get(
-                    "http://localhost:5000/api/v1/follow/following/ai",
+                    `${API_BASE_URL}/follow/following/ai`,
                     {
                         headers: {
-                            Authorization: token
+                            Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`
                         }
                     }
                 );
@@ -134,12 +153,41 @@ export class AiService {
         // =========================
         // FORMAT MESSAGES
         // =========================
+        const formattedMessages: AgentInputItem[] = messages.map((msg) => {
 
-        const formattedMessages = messages.map((msg) => ({
-            role: msg.role,
-            content: msg.content
-        }));
+            // SYSTEM
+            if (msg.role === "system") {
+                return {
+                    role: "system",
+                    content: msg.content
+                };
+            }
 
+            // USER
+            if (msg.role === "user") {
+                return {
+                    role: "user",
+                    content: [
+                        {
+                            type: "input_text",
+                            text: msg.content
+                        }
+                    ]
+                };
+            }
+
+            // ASSISTANT
+            return {
+                role: "assistant",
+                status: "completed",
+                content: [
+                    {
+                        type: "output_text",
+                        text: msg.content
+                    }
+                ]
+            };
+        });
         console.log("Messages Sent To AI:");
         console.log(formattedMessages);
 
